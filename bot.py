@@ -26,7 +26,7 @@ def bad_bot(message):
     json_data['bad'] += 1
     yield from bot.send_message(message.channel, "You have voted this bot as a bad bot. :frowning2:")
 
-def name_to_role(server, name):
+def name_to_role(name):
     return zz.of(bot.servers).map(_1.roles).flatten().find(_1.name == name)
 
 def role_data():
@@ -257,8 +257,13 @@ def votes():
 
 @bot.command()
 @asyncio.coroutine
-def volunteer():
-    choices = list(bot.get_all_members())
+def volunteer(role=None):
+    if role is not None:
+        role = name_to_role(role)
+    choices = zz.of(bot.get_all_members())
+    if role:
+        choices = choices.filter(lambda x: zz.of(x.roles).find(_1.id == role.id))
+    choices = choices.list()
     member = random.choice(choices)
     yield from bot.say("I choose {}!".format(member.name))
 
