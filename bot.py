@@ -10,6 +10,8 @@ import json
 import dice
 import traceback
 import timezone as tz
+import alakazam as zz
+from alakazam import _1, _2, _3, _4, _5
 
 description = '''An example bot to showcase the discord.ext.commands extension
 module.
@@ -23,6 +25,12 @@ def good_bot(message):
 def bad_bot(message):
     json_data['bad'] += 1
     yield from bot.send_message(message.channel, "You have voted this bot as a bad bot. :frowning2:")
+
+def name_to_role(server, name):
+    return zz.of(bot.servers).map(_1.roles).flatten().find(_1.name == name)
+
+def role_data():
+    return json_data['roles']
 
 autoreplies = [
     (r"\bgood bot\b", good_bot),
@@ -261,6 +269,40 @@ def choose(vals, n='1'):
     vals = vals.split(';')
     results = random.sample(vals, n)
     yield from bot.say("Drawing {} items: {}.".format(n, ', '.join(results)))
+
+#@bot.command(pass_context=True)
+#@asyncio.coroutine
+def role(ctx, cmd, *args):
+    if not isinstance(ctx.author, discord.Member):
+        return
+    if cmd == "manage":
+        ## !role manage <rolename>
+        if not ctx.author.permissions.administrator:
+            return
+        role = name_to_role(args[0])
+        if role:
+            role_data()[role.id] = {}
+            role_data()[role.id]['name'] = role.name
+            yield from bot.say("Okay, I'll manage {} now".format(role.name))
+    elif cmd == "unmanage":
+        ## !role unmanage <rolename>
+        if not ctx.author.permissions.administrator:
+            return
+        role = name_to_role(args[0])
+        if role and role.id in role_data():
+            del role_data()[role.id]
+            yield from bot.say("Okay, I'll forget about {}".format(role.name))
+    elif cmd == "owner":
+        subcmd = args[0]
+        if subcmd == "add":
+            ## !role owner add <rolename> <membername>
+            if not ctx.author.permissions.administrator:
+                return
+            data = role_data()[role.id]
+            if 'owners' not in data:
+                data['owners'] = []
+            member = zz.of(bot.get_all_members()).find(_1.name.lower() == args[2])
+            # /////
 
 try:
     with open('data.json') as f:
