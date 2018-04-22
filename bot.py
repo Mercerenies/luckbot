@@ -284,6 +284,44 @@ def choose(vals, n='1'):
     results = random.sample(vals, n)
     yield from bot.say("Drawing {} items: {}.".format(n, ', '.join(results)))
 
+@asyncio.coroutine
+def role_manage(ctx, role_name):
+    author = ctx.message.author
+    if not isinstance(author, discord.Member):
+        return
+    must_be_admin(author)
+    role = name_to_role(role_name)
+    if role:
+        if role.id in role_data():
+            yield from bot.say("I'm already managing that role.")
+        else:
+            role_data()[role.id] = {}
+            role_data()[role.id]['name'] = role.name
+            yield from bot.say("Okay, I'll manage {} now".format(role.name))
+    else:
+        yield from bot.say("I don't know of any role by that name.")
+
+@asyncio.coroutine
+def role_unmanage(ctx, role_name):
+    author = ctx.message.author
+    if not isinstance(author, discord.Member):
+        return
+    must_be_admin(author)
+    role = name_to_role(role_name)
+    if role and role.id in role_data():
+        del role_data()[role.id]
+        yield from bot.say("Okay, I'll forget about {}".format(role.name))
+    else:
+        yield from bot.say("I'm not managing any role by that name.")
+
+@bot.command(pass_context=True)
+@asyncio.coroutine
+def role(ctx, cmd, *args):
+    if cmd == "manage":
+        yield from role_manage(ctx, *args)
+    elif cmd == "unmanage":
+        yield from role_unmanage(ctx, *args)
+
 try:
     with open('data.json') as f:
         json_data = json.load(f)
