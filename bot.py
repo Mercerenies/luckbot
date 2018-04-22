@@ -49,6 +49,14 @@ def is_owner_of_role(member, role):
         return False
     return member.id in data['owners']
 
+def is_voluntary_role(role):
+    if role.id not in role_data():
+        return False
+    data = role_data()[role.id]
+    if 'voluntary' not in data:
+        return False
+    return data['voluntary']
+
 def owner_list(server, role):
     if role.id not in role_data():
         return []
@@ -383,6 +391,101 @@ def role_owner(ctx, cmd, role_name, *args):
             else:
                 yield from bot.say("{} doesn't own {}".format(member.display_name, role.name))
 
+@asyncio.coroutine
+def role_voluntary(ctx, role_name):
+    # !role voluntary <rolename>
+    author = ctx.message.author
+    role = name_to_role(role_name)
+    if (not role) or (role.id not in role_data()):
+        yield from bot.say("I'm not managing any role by that name.")
+        return
+    # Perms
+    if (not is_owner_of_role(author, role)) and (not author.server_permissions.administrator):
+        yield from bot.say("You don't have control over that role.")
+        return
+    if is_voluntary_role(role):
+        yield from bot.say("{} is no longer a voluntary role".format(role.name))
+        role_data()[role.id]['voluntary'] = False
+    else:
+        yield from bot.say("Members can now join and leave {} freely".format(role.name))
+        role_data()[role.id]['voluntary'] = True
+
+@asyncio.coroutine
+def role_volunteer(ctx, role_name):
+    # !role volunteer <rolename>
+    author = ctx.message.author
+    role = name_to_role(role_name)
+    if (not role) or (role.id not in role_data()):
+        yield from bot.say("I'm not managing any role by that name.")
+        return
+    if not is_voluntary_role(role):
+        yield from bot.say("You can't volunteer for that role")
+    elif role in author.roles:
+        yield from bot.say("You already belong to that role")
+    else:
+        yield from bot.add_roles(author, role)
+        yield from bot.say("You are now in {}, {}".format(role.name, author.display_name))
+
+@asyncio.coroutine
+def role_unvolunteer(ctx, role_name):
+    # !role unvolunteer <rolename>
+    author = ctx.message.author
+    role = name_to_role(role_name)
+    if (not role) or (role.id not in role_data()):
+        yield from bot.say("I'm not managing any role by that name.")
+        return
+    if not is_voluntary_role(role):
+        yield from bot.say("You can't unvolunteer for that role")
+    elif role in author.roles:
+        yield from bot.remove_roles(author, role)
+        yield from bot.say("You are no longer {}, {}".format(role.name, author.display_name))
+    else:
+        yield from bot.say("You don't have that role")
+
+@asyncio.coroutine
+def role_add(ctx, role_name, *args):
+    # !role add <rolename> <members>...
+    author = ctx.message.author
+    role = name_to_role(role_name)
+    if (not role) or (role.id not in role_data()):
+        yield from bot.say("I'm not managing any role by that name.")
+        return
+    # Perms
+    if (not is_owner_of_role(author, role)) and (not author.server_permissions.administrator):
+        yield from bot.say("You don't have control over that role.")
+        return
+    for arg in args:
+        member = find_member(ctx.message.server, arg)
+        if not member:
+            yield from bot.say("I don't know a {}".format(arg))
+        elif role in member.roles:
+            yield from bot.say("{} already has {}".format(member.display_name, role.name))
+        else:
+            yield from bot.add_roles(member, role)
+            yield from bot.say("{} now has {}".format(member.display_name, role.name))
+
+@asyncio.coroutine
+def role_remove(ctx, role_name, *args):
+    # !role remove <rolename> <members>...
+    author = ctx.message.author
+    role = name_to_role(role_name)
+    if (not role) or (role.id not in role_data()):
+        yield from bot.say("I'm not managing any role by that name.")
+        return
+    # Perms
+    if (not is_owner_of_role(author, role)) and (not author.server_permissions.administrator):
+        yield from bot.say("You don't have control over that role.")
+        return
+    for arg in args:
+        member = find_member(ctx.message.server, arg)
+        if not member:
+            yield from bot.say("I don't know a {}".format(arg))
+        elif role in member.roles:
+            yield from bot.remove_roles(member, role)
+            yield from bot.say("{} no longer has {}".format(member.display_name, role.name))
+        else:
+            yield from bot.say("{} doesn't have {}".format(member.display_name, role.name))
+
 @bot.command(pass_context=True)
 @asyncio.coroutine
 def role(ctx, cmd, *args):
@@ -392,6 +495,16 @@ def role(ctx, cmd, *args):
         yield from role_unmanage(ctx, *args)
     elif cmd == "owner":
         yield from role_owner(ctx, *args)
+    elif cmd == "voluntary":
+        yield from role_voluntary(ctx, *args)
+    elif cmd == "volunteer":
+        yield from role_volunteer(ctx, *args)
+    elif cmd == "unvolunteer":
+        yield from role_unvolunteer(ctx, *args)
+    elif cmd == "add":
+        yield from role_add(ctx, *args)
+    elif cmd == "remove":
+        yield from role_remove(ctx, *args)
 
 try:
     with open('data.json') as f:
