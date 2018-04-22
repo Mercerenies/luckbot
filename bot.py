@@ -13,6 +13,9 @@ import timezone as tz
 import alakazam as zz
 from alakazam import _1, _2, _3, _4, _5
 
+class PermissionsException(Exception):
+    pass
+
 description = '''An example bot to showcase the discord.ext.commands extension
 module.
 There are a number of utility commands being showcased here.'''
@@ -31,6 +34,10 @@ def name_to_role(name):
 
 def role_data():
     return json_data['roles']
+
+def must_be_admin(member):
+    if not member.server_permissions.administrator:
+        raise PermissionsException()
 
 autoreplies = [
     (r"\bgood bot\b", good_bot),
