@@ -36,6 +36,8 @@ def role_data():
     return json_data['roles']
 
 def must_be_admin(member):
+    if not isinstance(member, discord.Member):
+        raise PermissionsException()
     if not member.server_permissions.administrator:
         raise PermissionsException()
 
