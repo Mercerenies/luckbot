@@ -41,6 +41,28 @@ def must_be_admin(member):
     if not member.server_permissions.administrator:
         raise PermissionsException()
 
+def is_owner_of_role(member, role):
+    if role.id not in role_data():
+        return False
+    data = role_data()[role.id]
+    if 'owners' not in data:
+        return False
+    return member.id in data['owners']
+
+def owner_list(server, role):
+    if role.id not in role_data():
+        return []
+    data = role_data()[role.id]
+    if 'owners' not in data:
+        return []
+    return zz.of(data['owners']).map(server.get_member).filter(_1).list()
+
+def find_member(server, name):
+    name = name.lower()
+    def match(person):
+        return (person.name.lower() == name or person.display_name.lower() == name)
+    return zz.of(server.members).find(match)
+
 autoreplies = [
     (r"\bgood bot\b", good_bot),
     (r"\bgood morning\b", "Good morning! :sunrise:"),
@@ -286,6 +308,7 @@ def choose(vals, n='1'):
 
 @asyncio.coroutine
 def role_manage(ctx, role_name):
+    # !role manage <rolename>
     author = ctx.message.author
     if not isinstance(author, discord.Member):
         return
@@ -303,6 +326,7 @@ def role_manage(ctx, role_name):
 
 @asyncio.coroutine
 def role_unmanage(ctx, role_name):
+    # !role unmanage <rolename>
     author = ctx.message.author
     if not isinstance(author, discord.Member):
         return
@@ -314,6 +338,51 @@ def role_unmanage(ctx, role_name):
     else:
         yield from bot.say("I'm not managing any role by that name.")
 
+@asyncio.coroutine
+def role_owner(ctx, cmd, role_name, *args):
+    # !role owner list <rolename>
+    # !role owner add <rolename> <members>...
+    # !role owner remove <rolename> <members>...
+    author = ctx.message.author
+    role = name_to_role(role_name)
+    if (not role) or (role.id not in role_data()):
+        yield from bot.say("I'm not managing any role by that name.")
+        return
+    # Anyone can use list
+    if cmd == 'list':
+        result = zz.of(owner_list(ctx.message.server, role)).map(_1.display_name).list()
+        yield from bot.say("Members who own the role {}: {}".format(role.name, ', '.join(result)))
+        return
+    # Perms
+    if (not is_owner_of_role(author, role)) and (not author.server_permissions.administrator):
+        yield from bot.say("You don't have control over that role.")
+        return
+    # Make sure the owner list exists
+    data = role_data()[role.id]
+    if 'owners' not in data:
+        data['owners'] = []
+    # Add
+    if cmd == "add":
+        for arg in args:
+            member = find_member(ctx.message.server, arg)
+            if not member:
+                yield from bot.say("I don't know a {}".format(arg))
+            elif member.id in data['owners']:
+                yield from bot.say("{} already owns {}".format(member.display_name, role.name))
+            else:
+                data['owners'].append(member.id)
+                yield from bot.say("{} is now an owner of {}".format(member.display_name, role.name))
+    elif cmd == "remove":
+        for arg in args:
+            member = find_member(ctx.message.server, arg)
+            if not member:
+                yield from bot.say("I don't know a {}".format(arg))
+            elif member.id in data['owners']:
+                data['owners'].remove(member.id)
+                yield from bot.say("{} no longer owns {}".format(member.display_name, role.name))
+            else:
+                yield from bot.say("{} doesn't own {}".format(member.display_name, role.name))
+
 @bot.command(pass_context=True)
 @asyncio.coroutine
 def role(ctx, cmd, *args):
@@ -321,6 +390,8 @@ def role(ctx, cmd, *args):
         yield from role_manage(ctx, *args)
     elif cmd == "unmanage":
         yield from role_unmanage(ctx, *args)
+    elif cmd == "owner":
+        yield from role_owner(ctx, *args)
 
 try:
     with open('data.json') as f:
