@@ -105,11 +105,13 @@ def on_ready():
 @bot.command()
 @asyncio.coroutine
 def playing(*, mygame : str):
+    """Sets my presence tagline"""
     yield from bot.change_presence(game=discord.Game(name=str(mygame)))
 
 @bot.command()
 @asyncio.coroutine
 def genitem(*, item_name: str):
+    """Generates an item"""
     #0 = Dex, 1 = Intr, 2 = Str, 3 = Cont, 4 = Wis
     stat_int = random.randint(0, 4)
     stat_range = random.randint(-3, 10)
@@ -186,6 +188,7 @@ def genitem(*, item_name: str):
 @bot.command()
 @asyncio.coroutine
 def genchar(minlevel : int, maxlevel : int, pokemon : str):
+    """Generates a character"""
 
     randlevel = random.randint(minlevel, maxlevel)
     dex = random.randint(-5, 5)
@@ -223,6 +226,8 @@ def genchar(minlevel : int, maxlevel : int, pokemon : str):
 @bot.command()
 @asyncio.coroutine
 def timezone(time, frm, keyword, to):
+    """Converts between timezones
+    !timezone <time> <from-zone> to <to-zone>"""
     if not tz.is_timezone(frm) or not tz.is_timezone(to):
         yield from bot.say("I don't know that timezone... sorry...")
         return None
@@ -244,6 +249,7 @@ def timezone(time, frm, keyword, to):
 @bot.command(pass_context=True)
 @asyncio.coroutine
 def roll(ctx, die : str = None, name : discord.Member = None):
+    """Rolls one or more dice"""
 
     if name==None:
         name = str(ctx.message.author.display_name)
@@ -287,6 +293,7 @@ def roll(ctx, die : str = None, name : discord.Member = None):
 @bot.command()
 @asyncio.coroutine
 def votes():
+    """How good of a bot am I?"""
     if json_data['good'] > json_data['bad']:
         yield from bot.say("This bot is a good bot. Voted {} to {}.".format(json_data['good'], json_data['bad']))
     elif json_data['bad'] > json_data['good']:
@@ -297,6 +304,7 @@ def votes():
 @bot.command()
 @asyncio.coroutine
 def volunteer(role=None):
+    """Randomly selects a player"""
     if role is not None:
         role = name_to_role(role)
     choices = zz.of(bot.get_all_members())
@@ -309,6 +317,8 @@ def volunteer(role=None):
 @bot.command()
 @asyncio.coroutine
 def choose(vals, n='1'):
+    """Chooses from a collection of elements.
+    The values should be separated by a semicolon."""
     n = int(n)
     vals = vals.split(';')
     results = random.sample(vals, n)
@@ -489,6 +499,23 @@ def role_remove(ctx, role_name, *args):
 @bot.command(pass_context=True)
 @asyncio.coroutine
 def role(ctx, cmd, *args):
+    """Manages roles
+
+    Anyone can use
+    !role owner list <rolename>
+    !role volunteer <rolename>
+    !role unvolunteer <rolename>
+
+    Admin / role owner only
+    !role owner add <rolename> <members>...
+    !role owner remove <rolename> <members>...
+    !role voluntary <rolename>
+    !role add <rolename> <members>...
+    !role remove <rolename> <members>...
+
+    Admin only
+    !role manage <rolename>
+    !role unmanage <rolename>"""
     if cmd == "manage":
         yield from role_manage(ctx, *args)
     elif cmd == "unmanage":
