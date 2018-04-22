@@ -274,7 +274,7 @@ def choose(vals, n='1'):
     vals = vals.split(';')
     results = random.sample(vals, n)
     yield from bot.say("Drawing {} items: {}.".format(n, ', '.join(results)))
-o
+
 try:
     with open('data.json') as f:
         json_data = json.load(f)
