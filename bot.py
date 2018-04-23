@@ -342,12 +342,20 @@ def ducksay(message):
     if curr:
         res.append(curr)
     max_len = len(zz.of(res).max(len))
+    if len(res) > 1:
+        delim = zz.empty().chain(
+            zz.of(["/\\"]),
+            zz.repeat("||", n = len(res) - 2),
+            zz.of(["\\/"])
+        )
+    else:
+        delim = zz.repeat("<>")
     final = ''
     final += "```\n"
     final += " " + "_" * (max_len + 2) + " \n"
-    for elem in res:
+    for d, elem in zip(delim, res):
         elem += " " * (max_len - len(elem))
-        final += "< " + elem + " >\n"
+        final += d[0] + " " + elem + " " + d[1] + "\n"
     final += " " + "-" * (max_len + 2) + " \n"
     final += "  \\\n"
     final += "   \\\n"
