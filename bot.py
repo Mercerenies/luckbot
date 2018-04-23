@@ -324,6 +324,38 @@ def choose(vals, n='1'):
     results = random.sample(vals, n)
     yield from bot.say("Drawing {} items: {}.".format(n, ', '.join(results)))
 
+@bot.command()
+@asyncio.coroutine
+def ducksay(message):
+    """Duck says what?"""
+    MAX_LEN = 50
+    data = message.split(' ')
+    res = []
+    curr = ""
+    for val in data:
+        new = curr + ' ' + val if curr else curr + val
+        if len(new) >= MAX_LEN:
+            res.append(curr)
+            curr = ""
+            new = curr + val
+        curr = new
+    if curr:
+        res.append(curr)
+    max_len = len(zz.of(res).max(len))
+    final = ''
+    final += "```\n"
+    final += " " + "_" * (max_len + 2) + " \n"
+    for elem in res:
+        elem += " " * (max_len - len(elem))
+        final += "< " + elem + " >\n"
+    final += " " + "-" * (max_len + 2) + " \n"
+    final += "  \\\n"
+    final += "   \\\n"
+    final += "    \\ >()_\n"
+    final += "       (__)__ _\n"
+    final += "```"
+    yield from bot.say(final)
+
 @asyncio.coroutine
 def role_manage(ctx, role_name):
     # !role manage <rolename>
