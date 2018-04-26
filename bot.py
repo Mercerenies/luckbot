@@ -578,7 +578,7 @@ try:
         json_data = json.load(f)
     bot.run(json_data['key'])
 except Exception as e:
-    print("Failure:", e)
+    print("Failure:", type(e), e)
 finally:
     if json_data:
         with open('data.json', 'w') as f:
