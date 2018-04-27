@@ -9,6 +9,9 @@ import re
 import json
 import dice
 import traceback
+import time
+import aiohttp
+import asyncio
 import timezone as tz
 import alakazam as zz
 from alakazam import _1, _2, _3, _4, _5
@@ -574,12 +577,23 @@ def role(ctx, cmd, *args):
         yield from role_remove(ctx, *args)
 
 try:
-    with open('data.json') as f:
-        json_data = json.load(f)
-    bot.run(json_data['key'])
+    while True:
+        try:
+            with open('data.json') as f:
+                json_data = json.load(f)
+            bot.run(json_data['key'])
+        except (aiohttp.errors.ClientResponseError,
+                aiohttp.errors.ClientRequestError,
+                aiohttp.errors.ClientOSError,
+                aiohttp.errors.ClientDisconnectedError,
+                aiohttp.errors.ClientTimeoutError,
+                asyncio.TimeoutError,
+                aiohttp.errors.HttpProcessingError) as e:
+            print("Network failure:", type(e), e)
+            time.sleep(1)
+        finally:
+           if json_data:
+               with open('data.json', 'w') as f:
+                   json.dump(json_data, f)
 except Exception as e:
     print("Failure:", type(e), e)
-finally:
-    if json_data:
-        with open('data.json', 'w') as f:
-            json.dump(json_data, f)
