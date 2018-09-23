@@ -1,4 +1,12 @@
-#!/usr/bin/python3
+#!/usr/bin/python3.5
+
+#import sys
+
+#sys.path.insert(0, './vendor/discord.py')
+#sys.path.insert(0, './vendor/aiohttp')
+#sys.path.insert(0, './vendor/attrs/src')
+#sys.path.insert(0, './vendor/websockets/src')
+#sys.path.insert(0, './vendor/yarl')
 
 import discord
 from discord.ext import commands
@@ -88,7 +96,7 @@ json_data = None
 def on_message(message):
     if (message.author == bot.user):
         return
-    if (str(message.channel) == "general") or (str(message.channel) == "bot-testing-grounds"):
+    if (str(message.channel) == "general") or (str(message.channel) == "bot_testing_grounds"):
         for ptn, reply in autoreplies:
             if re.search(ptn, message.content, re.I):
                 if callable(reply):
