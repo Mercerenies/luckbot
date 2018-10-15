@@ -29,6 +29,17 @@ class CodenameColors:
     def __call__(self, i, j):
         return self.contents[i][j]
 
+class CallGuard:
+
+    def __init__(self, value):
+        self.value = value
+
+    def __call__(self, *args, **kwargs):
+        if callable(self.value):
+            return self.value(*args, **kwargs)
+        else:
+            return self.value
+
 class GridConfig:
 
     WIDTH = 64
@@ -37,8 +48,8 @@ class GridConfig:
     def __init__(self, rows, cols, bgcolor='white', fgcolor='black'):
         self.rows = rows
         self.cols = cols
-        self.bgcolor = bgcolor if callable(bgcolor) else lambda i, j: bgcolor
-        self.fgcolor = fgcolor if callable(fgcolor) else lambda i, j: fgcolor
+        self.bgcolor = CallGuard(bgcolor)
+        self.fgcolor = CallGuard(fgcolor)
 
     def make_grid(self):
         WIDTH, HEIGHT = GridConfig.WIDTH, GridConfig.HEIGHT
