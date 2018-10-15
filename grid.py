@@ -29,6 +29,29 @@ class CodenameColors:
     def __call__(self, i, j):
         return self.contents[i][j]
 
+class BasicCellManager:
+
+    def __init__(self, text, bg, fg):
+        self._bg = bg
+        self._fg = fg
+        self._text = text
+
+    def text(self, i, j):
+        return self._text
+
+    def foreground(self, i, j):
+        return self._fg
+
+    def background(self, i, j):
+        return self._bg
+
+class GenericCellManager:
+
+    def __init__(self, text='', bg='white', fg='black'):
+        self.text = CallGuard(text)
+        self.background = CallGuard(bg)
+        self.foreground = CallGuard(fg)
+
 class CallGuard:
 
     def __init__(self, value):
@@ -45,12 +68,10 @@ class GridConfig:
     WIDTH = 64
     HEIGHT = 64
 
-    def __init__(self, rows, cols, text='', bgcolor='white', fgcolor='black'):
+    def __init__(self, rows, cols, cells=BasicCellManager(text='', bg='white', fg='black')):
         self.rows = rows
         self.cols = cols
-        self.text = CallGuard(text)
-        self.bgcolor = CallGuard(bgcolor)
-        self.fgcolor = CallGuard(fgcolor)
+        self.cells = cells
 
     @staticmethod
     def print_text(draw, text, x, y):
@@ -76,7 +97,9 @@ class GridConfig:
         for i, j in zz.range(m).cross_product(zz.range(n)):
             pos0 = (i * WIDTH, j * HEIGHT)
             pos1 = ((i + 1) * WIDTH, (j + 1) * HEIGHT)
-            draw.rectangle([pos0, pos1], fill=self.bgcolor(i, j), outline=self.fgcolor(i, j))
-            text = self.text(i, j)
+            draw.rectangle([pos0, pos1],
+                           fill=self.cells.background(i, j),
+                           outline=self.cells.foreground(i, j))
+            text = self.cells.text(i, j)
             GridConfig.print_text(draw, text, (i + 0.5) * WIDTH, (j + 0.5) * HEIGHT)
         return image
