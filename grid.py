@@ -5,6 +5,8 @@ import random
 import alakazam as zz
 from alakazam import _1, _2, _3, _4, _5
 
+# TODO Custom word list
+
 class WordList:
 
     def __init__(self):
