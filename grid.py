@@ -55,6 +55,8 @@ class GridConfig:
     @staticmethod
     def print_text(draw, text, x, y):
         WIDTH, HEIGHT = GridConfig.WIDTH, GridConfig.HEIGHT
+        if text == '':
+            return
 
         font_size = 12
         while True:
