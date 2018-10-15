@@ -15,11 +15,12 @@ import random
 import asyncio
 import re
 import json
-import dice
 import traceback
 import time
 import aiohttp
 import asyncio
+
+import dice
 import timezone as tz
 import alakazam as zz
 from alakazam import _1, _2, _3, _4, _5
