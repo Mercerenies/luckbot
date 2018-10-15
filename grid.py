@@ -5,20 +5,52 @@ import random
 import alakazam as zz
 from alakazam import _1, _2, _3, _4, _5
 
+class WordList:
+
+    def __init__(self):
+        with open('words.txt') as file:
+            self.words = zz.of(file).map(_1[:-1]).list()
+        random.shuffle(self.words)
+
+    def sample(self):
+        return self.words.pop()
+
+class HiddenColorsManager:
+
+    def __init__(self, man, fg='black', bg='white'):
+        self.man = man
+        self.fg = fg
+        self.bg = bg
+
+    def background(self, i, j):
+        return self.bg
+
+    def foreground(self, i, j):
+        return self.fg
+
+    def text(self, i, j):
+        return self.man.text(i, j)
+
 class CodenameManager:
 
     def __init__(self, rows, cols, defcolor='white', colors=(('red', 9), ('blue', 9), ('black', 1))):
         self.contents = []
+        self.texts = []
+
+        words = WordList()
 
         coordinates = zz.range(rows).cross_product(zz.range(cols)).list()
         random.shuffle(coordinates)
 
         # Generate
         for i in range(rows):
-            arr = []
+            arr  = []
+            arr1 = []
             for j in range(cols):
-                arr.append(defcolor)
+                arr .append(defcolor)
+                arr1.append(words.sample())
             self.contents.append(arr)
+            self.texts.append(arr1)
 
         # Fill in
         for c, n in colors:
@@ -33,7 +65,10 @@ class CodenameManager:
         return 'white' if self.contents[i][j] == 'black' else 'black'
 
     def text(self, i, j):
-        return ''
+        return self.texts[i][j]
+
+    def hidden(self):
+        return HiddenColorsManager(self)
 
 class BasicCellManager:
 
