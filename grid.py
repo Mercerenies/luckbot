@@ -33,7 +33,7 @@ class HiddenColorsManager:
 
 class CodenameManager:
 
-    def __init__(self, rows, cols, defcolor='white', colors=(('red', 9), ('blue', 9), ('black', 1))):
+    def __init__(self, rows, cols, defcolor='lightgray', colors=(('red', 9), ('blue', 9), ('black', 1))):
         self.contents = []
         self.texts = []
 
