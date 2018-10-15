@@ -20,7 +20,7 @@ import time
 import aiohttp
 import asyncio
 
-from grid import CodenameColors, GridConfig, GenericCellManager
+from grid import CodenameManager, GridConfig
 import dice
 import timezone as tz
 import alakazam as zz
@@ -610,8 +610,8 @@ def codenames(ctx):
     !codenames
 
     """
-    colors = CodenameColors(rows=5, cols=5)
-    cfg = GridConfig(rows=5, cols=5, cells=GenericCellManager(bg=colors))
+    manager = CodenameManager(rows=5, cols=5)
+    cfg = GridConfig(rows=5, cols=5, cells=manager)
     image = cfg.make_grid()
     with BytesIO() as buffer:
         image.save(buffer, 'PNG')

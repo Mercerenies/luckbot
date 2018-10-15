@@ -5,7 +5,7 @@ import random
 import alakazam as zz
 from alakazam import _1, _2, _3, _4, _5
 
-class CodenameColors:
+class CodenameManager:
 
     def __init__(self, rows, cols, defcolor='white', colors=(('red', 9), ('blue', 9), ('black', 1))):
         self.contents = []
@@ -26,8 +26,14 @@ class CodenameColors:
                 i, j = coordinates.pop()
                 self.contents[i][j] = c
 
-    def __call__(self, i, j):
+    def background(self, i, j):
         return self.contents[i][j]
+
+    def foreground(self, i, j):
+        return 'white' if self.contents[i][j] == 'black' else 'black'
+
+    def text(self, i, j):
+        return ''
 
 class BasicCellManager:
 
@@ -74,7 +80,7 @@ class GridConfig:
         self.cells = cells
 
     @staticmethod
-    def print_text(draw, text, x, y):
+    def print_text(draw, text, fg, x, y):
         WIDTH, HEIGHT = GridConfig.WIDTH, GridConfig.HEIGHT
         if text == '':
             return
@@ -86,7 +92,7 @@ class GridConfig:
             if w < WIDTH and h < HEIGHT:
                 break
             font_size -= 1
-        draw.text((x - w / 2, y - h / 2), text, font=font, fill='black')
+        draw.text((x - w / 2, y - h / 2), text, font=font, fill=fg)
 
     def make_grid(self):
         WIDTH, HEIGHT = GridConfig.WIDTH, GridConfig.HEIGHT
@@ -97,9 +103,10 @@ class GridConfig:
         for i, j in zz.range(m).cross_product(zz.range(n)):
             pos0 = (i * WIDTH, j * HEIGHT)
             pos1 = ((i + 1) * WIDTH, (j + 1) * HEIGHT)
+            fg = self.cells.foreground(i, j)
             draw.rectangle([pos0, pos1],
                            fill=self.cells.background(i, j),
-                           outline=self.cells.foreground(i, j))
+                           outline=fg)
             text = self.cells.text(i, j)
-            GridConfig.print_text(draw, text, (i + 0.5) * WIDTH, (j + 0.5) * HEIGHT)
+            GridConfig.print_text(draw, text, fg, (i + 0.5) * WIDTH, (j + 0.5) * HEIGHT)
         return image
