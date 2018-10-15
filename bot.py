@@ -10,7 +10,7 @@
 
 import discord
 from discord.ext import commands
-from io import StringIO
+from io import StringIO, BytesIO
 import random
 import asyncio
 import re
@@ -20,6 +20,7 @@ import time
 import aiohttp
 import asyncio
 
+from grid import GridConfig
 import dice
 import timezone as tz
 import alakazam as zz
@@ -584,6 +585,23 @@ def role(ctx, cmd, *args):
         yield from role_add(ctx, *args)
     elif cmd == "remove":
         yield from role_remove(ctx, *args)
+
+@bot.command(pass_context=True)
+@asyncio.coroutine
+def grid(ctx, dims="3x3"):
+    """Generates a grid.
+
+    !grid NxM
+
+    """
+    WIDTH, HEIGHT = 64, 64
+    n, m = map(int, re.findall(r"[0-9]+", dims))
+    cfg = GridConfig(rows=n, cols=m)
+    image = cfg.make_grid()
+    with BytesIO() as buffer:
+        image.save(buffer, 'PNG')
+        buffer.seek(0)
+        yield from bot.send_file(ctx.message.channel, buffer, filename="image.png")
 
 try:
     while True:
