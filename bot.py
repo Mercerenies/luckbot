@@ -20,7 +20,7 @@ import time
 import aiohttp
 import asyncio
 
-from grid import CodenameManager, GridConfig
+from grid import CodenameManager, GridConfig, DefaultWordList, CustomWordList
 import dice
 import timezone as tz
 import alakazam as zz
@@ -607,13 +607,27 @@ def grid(ctx, dims="3x3"):
 
 @bot.command(pass_context=True)
 @asyncio.coroutine
-def codenames(ctx):
-    """Generates a Codenames board
+def codenames(ctx, wordlist=None):
+    """Generates a Codenames board.
 
-    !codenames
+    !codenames <wordlist>
+
+    If provided, the wordlist should be a semicolon-separated list of
+    words to include. The list must contain at least 25 elements but
+    can contain more.
 
     """
-    manager = CodenameManager(rows=5, cols=5)
+
+    if wordlist is None:
+        wordlist = DefaultWordList()
+    else:
+        wordlist = wordlist.split(';')
+        if len(wordlist) < 25:
+            yield from bot.say("Not enough words.")
+            return
+        wordlist = CustomWordList(wordlist)
+
+    manager = CodenameManager(rows=5, cols=5, words=wordlist)
     cfg  = GridConfig(rows=5, cols=5, cells=manager)
     cfg1 = GridConfig(rows=5, cols=5, cells=manager.hidden())
     yield from send_image_of_grid(cfg , ctx.message.channel)
