@@ -97,7 +97,7 @@ json_data = None
 def on_message(message):
     if (message.author == bot.user):
         return
-    if (str(message.channel) == "general") or (str(message.channel) == "bot_testing_grounds"):
+    if (str(message.channel) == "general") or (str(message.channel) == "bot_testing-grounds"):
         for ptn, reply in autoreplies:
             if re.search(ptn, message.content, re.I):
                 if callable(reply):
