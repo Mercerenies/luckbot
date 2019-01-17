@@ -124,7 +124,7 @@ class GridConfig:
 
         font_size = 12
         while True:
-            font = ImageFont.truetype('LiberationSans-Regular.ttf', font_size)
+            font = ImageFont.truetype('DejaVuSans.ttf', font_size)
             w, h = font.getsize(text)
             if w < WIDTH and h < HEIGHT:
                 break
