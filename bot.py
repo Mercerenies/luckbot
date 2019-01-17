@@ -27,9 +27,8 @@ from alakazam import _1, _2, _3, _4, _5
 class PermissionsException(Exception):
     pass
 
-description = '''An example bot to showcase the discord.ext.commands extension
-module.
-There are a number of utility commands being showcased here.'''
+description = '''Hi, I'm Luckbot! I provide several useful utilities to the Discord
+Games server.'''
 bot = commands.Bot(command_prefix='!', description=description)
 
 def good_bot(message):
