@@ -633,6 +633,29 @@ def codenames(ctx, wordlist=None):
     yield from send_image_of_grid(cfg , ctx.message.channel)
     yield from send_image_of_grid(cfg1, ctx.message.channel)
 
+@bot.command(pass_context=True)
+@asyncio.coroutine
+def whois(ctx, name):
+    """Identifies a member of this server.
+
+    !whois <name>
+
+    If I recognize the name of that person, I'll tell you who it
+    is.
+
+    """
+
+    member = find_member(ctx.message.server, name)
+    if member:
+        embed = discord.Embed(title="", description="", color=0x000000)
+        embed.add_field(name="Name", value=str(member), inline=True)
+        embed.add_field(name="Display Name", value=member.display_name, inline=True)
+        embed.add_field(name="Bot?", value=str(member.bot), inline=True)
+        embed.set_thumbnail(url=member.avatar_url or member.default_avatar_url)
+        yield from bot.say(embed=embed)
+    else:
+        yield from bot.say("I don't know a {}".format(name))
+
 try:
     while True:
         try:
