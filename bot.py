@@ -98,6 +98,12 @@ def contains_link(text):
     return bool(re.search(LINK_RE, text))
 
 @asyncio.coroutine
+def log_message(text):
+    channel = zz.of(bot.get_all_channels()).find(_1.name == "bot-logs")
+    if channel:
+        yield from bot.send_message(channel, text)
+
+@asyncio.coroutine
 def spam_check(message):
     if message.author == bot.user:
         return
@@ -106,6 +112,7 @@ def spam_check(message):
         if role not in zz.of(message.author.roles).map(_1.id):
             yield from bot.delete_message(message)
             yield from bot.send_message(message.author, "You don't have permission to post links. Feel free to ask an admin for this permission :)")
+            yield from log_message("{} (in channel #{}) just tried to post the link: {}".format(message.author, message.channel, message.content))
 
 @bot.event
 @asyncio.coroutine
