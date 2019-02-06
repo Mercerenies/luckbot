@@ -238,6 +238,7 @@ def genchar(minlevel : int, maxlevel : int, pokemon : str):
     sre = random.randint(-5, 5)
     con = random.randint(-5, 5)
     wis = random.randint(-5, 5)
+    cha = random.randint(-5, 5)
 
     rarr = random.randint(randlevel, 100)
     if (rarr >= 80):
@@ -259,11 +260,14 @@ def genchar(minlevel : int, maxlevel : int, pokemon : str):
     if (rarr >= 80):
         wis += randlevel
 
+    rarr = random.randint(randlevel, 100)
+    if (rarr >= 80):
+        cha += randlevel
+
     hlt = (4*randlevel) + con
     xpr = hlt - (randlevel * 3)
 
-    yield from bot.say(pokemon + "'s Stats\nLevel: " + str(randlevel) + "\nHP: " + str(hlt) + "\nDexterity: " + str(dex) + "\nIntelligence: " + str(itl) + "\nStrength: " + str(sre) + "\nConstitution: " + str(con) + "\nWisdom: " + str(wis))
-    #print(pokemon + "'s Stats\nLevel: " + str(randlevel) + "\nHP: " + str(hlt) + "\nDexterity: " + str(dex) + "\nIntelligence: " + str(itl) + "\nStrength: " + str(sre) + "\nConstitution: " + str(con) + "\nWisdom: " + str(wis) + "\nXP Earned: " + str(xpr) + "\n----------")
+    yield from bot.say(pokemon + "'s Stats\nLevel: " + str(randlevel) + "\nHP: " + str(hlt) + "\nDexterity: " + str(dex) + "\nIntelligence: " + str(itl) + "\nStrength: " + str(sre) + "\nConstitution: " + str(con) + "\nWisdom: " + str(wis) + "\nCharisma: " + str(cha))
 
 @bot.command()
 @asyncio.coroutine
