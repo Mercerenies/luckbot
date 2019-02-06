@@ -92,11 +92,29 @@ autoreplies = [
 ]
 json_data = None
 
+LINK_RE = re.compile("https?://|discord.gg/|discordapp.com/")
+
+def contains_link(text):
+    return bool(re.search(LINK_RE, text))
+
+@asyncio.coroutine
+def spam_check(message):
+    if message.author == bot.user:
+        return
+    if 'linky' in json_data and contains_link(message.content):
+        role = json_data['linky']
+        if role not in zz.of(message.author.roles).map(_1.id):
+            yield from bot.delete_message(message)
+            yield from bot.send_message(message.author, "You don't have permission to post links. Feel free to ask an admin for this permission :)")
+
 @bot.event
 @asyncio.coroutine
 def on_message(message):
     if (message.author == bot.user):
         return
+    # Spam checking for links
+    yield from spam_check(message)
+    # Autoreplies :)
     if (str(message.channel) == "general") or (str(message.channel) == "bot_testing-grounds"):
         for ptn, reply in autoreplies:
             if re.search(ptn, message.content, re.I):
@@ -105,6 +123,11 @@ def on_message(message):
                 else:
                     yield from bot.send_message(message.channel, reply)
     yield from bot.process_commands(message)
+
+@bot.event
+@asyncio.coroutine
+def on_message_edit(before, after):
+    yield from spam_check(after)
 
 @bot.event
 @asyncio.coroutine
@@ -655,6 +678,28 @@ def whois(ctx, name):
         yield from bot.say(embed=embed)
     else:
         yield from bot.say("I don't know a {}".format(name))
+
+@bot.command(pass_context=True)
+@asyncio.coroutine
+def assignlinkrole(ctx, role_name):
+    """Determines the role used for spam-checking against links.
+
+    !assignlinkrole <role_name>
+
+    (admin only)
+
+    """
+    role = name_to_role(role_name)
+    if not ctx.message.author.server_permissions.administrator:
+        yield from bot.say("You don't have permission to do that")
+    elif role_name == "":
+        yield from bot.say("I'll no longer mess with links")
+        del json_data['linky']
+    elif not role:
+        yield from bot.say("I don't know that role")
+    else:
+        yield from bot.say("I'll make sure this server stays spam-free!")
+        json_data['linky'] = role.id
 
 try:
     while True:
