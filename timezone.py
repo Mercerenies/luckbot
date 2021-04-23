@@ -1,7 +1,9 @@
 
 import re
 
-_TIMEZONES = {}
+from typing import Dict
+
+_TIMEZONES: Dict[str, 'Timezone'] = {}
 _PTN = re.compile(r'^UTC([-+]\d+)(?::(\d+))?$')
 
 def time(hrs, mins):
