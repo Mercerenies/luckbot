@@ -1,52 +1,57 @@
 
 import re
 
-from typing import Dict
+from typing import Dict, NewType, Tuple, Optional
 
 _TIMEZONES: Dict[str, 'Timezone'] = {}
 _PTN = re.compile(r'^UTC([-+]\d+)(?::(\d+))?$')
 
-def time(hrs, mins):
-    return hrs + mins / 60
+Time = NewType('Time', float)
+
+def time(hrs: int, mins: int) -> Time:
+    return Time(hrs + mins / 60)
 
 class Timezone:
+    abbr: str
+    name: str
+    offset: Time
 
-    def __init__(self, abbr, name, offset):
+    def __init__(self, abbr: str, name: str, offset: Time) -> None:
         self.abbr = abbr
         self.name = name
         self.offset = offset
 
-    def to_gmt(self, time):
-        return time - self.offset
+    def to_gmt(self, time: Time) -> Time:
+        return Time(time - self.offset)
 
-    def from_gmt(self, time):
-        return time + self.offset
+    def from_gmt(self, time: Time) -> Time:
+        return Time(time + self.offset)
 
-def convert(hrs, mins, frm, to):
+def convert(hrs: int, mins: int, frm: str, to: str) -> Tuple[int, int]:
     t = time(hrs, mins)
     gmt = _TIMEZONES[frm].to_gmt(t)
     res = _TIMEZONES[to].from_gmt(gmt)
-    return (res // 1, (res % 1) * 60)
+    return (int(res // 1), int((res % 1) * 60))
 
-def convert_formatted(time, frm, to):
+def convert_formatted(time: str, frm: str, to: str) -> Optional[Tuple[int, int]]:
     match = re.match(r'^(\d+)(?::(\d+))? ?(am|pm|AM|PM)?', time)
     if not match:
         return None
-    grp = list(match.groups())
-    grp[0] = int(grp[0])
-    grp[1] = int(grp[1] or 0)
-    grp[-1] = grp[-1] or ''
-    if grp[-1].upper() == 'AM' or grp[-1].upper() == 'PM':
-        if grp[-1].upper() == 'AM':
+    grp = match.groups()
+    hrs = int(grp[0])
+    mins = int(grp[1] or 0)
+    ampm = grp[-1] or ''
+    if ampm.upper() == 'AM' or ampm.upper() == 'PM':
+        if ampm.upper() == 'AM':
             pass
-        elif grp[-1].upper() == 'PM':
-            grp[0] += 12
-    return convert(grp[0], grp[1], frm, to)
+        elif ampm.upper() == 'PM':
+            hrs += 12
+    return convert(hrs, mins, frm, to)
 
-def is_timezone(tz):
+def is_timezone(tz: str) -> bool:
     return tz.upper() in _TIMEZONES
 
-def timezone_name(tz):
+def timezone_name(tz: str) -> Optional[str]:
     if not is_timezone(tz):
         return None
     return _TIMEZONES[tz].name

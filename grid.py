@@ -5,52 +5,66 @@ import random
 import alakazam as zz
 from alakazam import _1, _2, _3, _4, _5
 
+from typing import List, Tuple, Optional, Union
+
 # TODO Custom word list
 
-class DefaultWordList:
+class WordList:
 
-    def __init__(self):
+    def sample(self) -> str:
+        return ""
+
+class DefaultWordList(WordList):
+    words: List[str]
+
+    def __init__(self) -> None:
         with open('words.txt') as file:
             self.words = zz.of(file).map(_1[:-1]).list()
         random.shuffle(self.words)
 
-    def sample(self):
+    def sample(self) -> str:
         return self.words.pop()
 
-class CustomWordList:
+class CustomWordList(WordList):
+    words: List[str]
 
-    def __init__(self, lst):
+    def __init__(self, lst: List[str]) -> None:
         self.words = lst
         random.shuffle(self.words)
 
-    def sample(self):
+    def sample(self) -> str:
         return self.words.pop()
 
 class HiddenColorsManager:
+    man: 'CodenameManager'
+    fg: str
+    bg: str
 
-    def __init__(self, man, fg='black', bg='white'):
+    def __init__(self, man: 'CodenameManager', fg: str = 'black', bg: str = 'white'):
         self.man = man
         self.fg = fg
         self.bg = bg
 
-    def background(self, i, j):
+    def background(self, i: int, j: int) -> str:
         return self.bg
 
-    def foreground(self, i, j):
+    def foreground(self, i: int, j: int) -> str:
         return self.fg
 
-    def text(self, i, j):
+    def text(self, i: int, j: int) -> str:
         return self.man.text(i, j)
 
 class CodenameManager:
+    contents: List[List[str]]
+    texts: List[List[str]]
 
-    def __init__(self, rows, cols, defcolor='lightgray', colors=(('red', 9), ('blue', 9), ('black', 1)), words=None):
+    def __init__(self, rows: int, cols: int, defcolor: str = 'lightgray', colors: Tuple[Tuple[str, int], ...] = (('red', 9), ('blue', 9), ('black', 1)), words: Optional[WordList] = None):
         self.contents = []
         self.texts = []
 
         words = words or DefaultWordList()
 
-        coordinates = zz.range(rows).cross_product(zz.range(cols)).list()
+        coordinates: List[Tuple[int, int]] = zz.range(rows).cross_product(zz.range(cols)).list()
         random.shuffle(coordinates)
 
         # Generate
@@ -69,64 +83,63 @@ class CodenameManager:
                 i, j = coordinates.pop()
                 self.contents[i][j] = c
 
-    def background(self, i, j):
+    def background(self, i: int, j: int) -> str:
         return self.contents[i][j]
 
-    def foreground(self, i, j):
+    def foreground(self, i: int, j: int) -> str:
         return 'white' if self.contents[i][j] == 'black' else 'black'
 
-    def text(self, i, j):
+    def text(self, i: int, j: int) -> str:
         return self.texts[i][j]
 
-    def hidden(self):
+    def hidden(self) -> HiddenColorsManager:
         return HiddenColorsManager(self)
 
-class BasicCellManager:
+class CellManager:
 
-    def __init__(self, text, bg, fg):
+    def text(self, i: int, j: int) -> str:
+        return ""
+
+    def foreground(self, i: int, j: int) -> str:
+        return "black"
+
+    def background(self, i: int, j: int) -> str:
+        return "white"
+
+class BasicCellManager(CellManager):
+    _bg: str
+    _fg: str
+    _text: str
+
+    def __init__(self, text: str, bg: str, fg: str):
         self._bg = bg
         self._fg = fg
         self._text = text
 
-    def text(self, i, j):
+    def text(self, i: int, j: int) -> str:
         return self._text
 
-    def foreground(self, i, j):
+    def foreground(self, i: int, j: int) -> str:
         return self._fg
 
-    def background(self, i, j):
+    def background(self, i: int, j: int) -> str:
         return self._bg
 
-class GenericCellManager:
-
-    def __init__(self, text='', bg='white', fg='black'):
-        self.text = CallGuard(text)
-        self.background = CallGuard(bg)
-        self.foreground = CallGuard(fg)
-
-class CallGuard:
-
-    def __init__(self, value):
-        self.value = value
-
-    def __call__(self, *args, **kwargs):
-        if callable(self.value):
-            return self.value(*args, **kwargs)
-        else:
-            return self.value
-
 class GridConfig:
+    rows: int
+    cols: int
+    cells: CellManager
 
     WIDTH = 64
     HEIGHT = 64
 
-    def __init__(self, rows, cols, cells=BasicCellManager(text='', bg='white', fg='black')):
+    def __init__(self, rows: int, cols: int, cells: CellManager = BasicCellManager(text='', bg='white', fg='black')) -> None:
         self.rows = rows
         self.cols = cols
         self.cells = cells
 
     @staticmethod
-    def print_text(draw, text, fg, x, y):
+    def print_text(draw: ImageDraw, text: str, fg: str, x: int, y: int) -> None:
         WIDTH, HEIGHT = GridConfig.WIDTH, GridConfig.HEIGHT
         if text == '':
             return
@@ -140,7 +153,7 @@ class GridConfig:
             font_size -= 1
         draw.text((x - w / 2, y - h / 2), text, font=font, fill=fg)
 
-    def make_grid(self):
+    def make_grid(self) -> Image:
         WIDTH, HEIGHT = GridConfig.WIDTH, GridConfig.HEIGHT
         n, m = self.rows, self.cols
 
