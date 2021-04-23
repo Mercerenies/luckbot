@@ -19,6 +19,7 @@ import traceback
 import time
 import aiohttp
 import asyncio
+import traceback
 
 from grid import CodenameManager, GridConfig, DefaultWordList, CustomWordList
 import dice
@@ -731,13 +732,10 @@ try:
             with open('data.json') as f:
                 json_data = json.load(f)
             bot.run(json_data['key'])
-        except (aiohttp.errors.ClientResponseError,
-                aiohttp.errors.ClientRequestError,
-                aiohttp.errors.ClientOSError,
-                aiohttp.errors.ClientDisconnectedError,
-                aiohttp.errors.ClientTimeoutError,
-                asyncio.TimeoutError,
-                aiohttp.errors.HttpProcessingError) as e:
+        except (aiohttp.ClientError,
+                aiohttp.ClientOSError,
+                TimeoutError,
+                asyncio.TimeoutError) as e:
             print("Network failure:", type(e), e)
             time.sleep(1)
         finally:
@@ -746,3 +744,4 @@ try:
                    json.dump(json_data, f)
 except Exception as e:
     print("Failure:", type(e), e)
+    traceback.print_exc()
