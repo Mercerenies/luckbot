@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
 while (1) {
-    system q{./bot.py};
+    system q{python3.9 ./bot.py};
     sleep 5;
 }

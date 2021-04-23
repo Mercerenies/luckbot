@@ -1,4 +1,4 @@
-#!/usr/bin/python3.5
+#!/usr/bin/python3.9
 
 #import sys
 
@@ -33,13 +33,15 @@ description = '''Hi, I'm Luckbot! I provide several useful utilities to the Disc
 Games server.'''
 bot = commands.Bot(command_prefix='!', description=description)
 
+@asyncio.coroutine
 def good_bot(message):
     json_data['good'] += 1
-    yield from bot.send_message(message.channel, "You have voted this bot as a good bot. :robot:")
+    yield from message.channel.send("You have voted this bot as a good bot. :robot:")
 
+@asyncio.coroutine
 def bad_bot(message):
     json_data['bad'] += 1
-    yield from bot.send_message(message.channel, "You have voted this bot as a bad bot. :frowning2:")
+    yield from message.channel.send("You have voted this bot as a bad bot. :frowning2:")
 
 def name_to_role(name):
     return zz.of(bot.servers).map(_1.roles).flatten().find(_1.name == name)
@@ -128,7 +130,7 @@ def on_message(message):
                 if callable(reply):
                     yield from reply(message)
                 else:
-                    yield from bot.send_message(message.channel, reply)
+                    yield from message.channel.send(reply)
     yield from bot.process_commands(message)
 
 @bot.event
@@ -146,13 +148,14 @@ def on_ready():
 
 @bot.command()
 @asyncio.coroutine
-def playing(*, mygame : str):
+def playing(ctx, *, mygame : str):
     """Sets my presence tagline"""
-    yield from bot.change_presence(game=discord.Game(name=str(mygame)))
+    yield from bot.change_presence(activity=discord.Game(name=str(mygame)))
 
+'''
 @bot.command()
 @asyncio.coroutine
-def genitem(*, item_name: str):
+def genitem(ctx, *, item_name: str):
     """Generates an item"""
     #0 = Dex, 1 = Intr, 2 = Str, 3 = Cont, 4 = Wis
     stat_int = random.randint(0, 4)
@@ -221,15 +224,15 @@ def genitem(*, item_name: str):
         stat = "Wisdom"
         
     if (stat_range < 0):
-        yield from bot.say(str(item_name) + "\n" + stat + ": " + str(stat_range))
+        yield from ctx.send(str(item_name) + "\n" + stat + ": " + str(stat_range))
         
     if (stat_range > 0):
-        yield from bot.say(str(item_name) + "\n" + stat + ": +" + str(stat_range))
+        yield from ctx.send(str(item_name) + "\n" + stat + ": +" + str(stat_range))
         
 
 @bot.command()
 @asyncio.coroutine
-def genchar(minlevel : int, maxlevel : int, pokemon : str):
+def genchar(ctx, minlevel : int, maxlevel : int, pokemon : str):
     """Generates a character"""
 
     randlevel = random.randint(minlevel, maxlevel)
@@ -267,15 +270,16 @@ def genchar(minlevel : int, maxlevel : int, pokemon : str):
     hlt = (4*randlevel) + con
     xpr = hlt - (randlevel * 3)
 
-    yield from bot.say(pokemon + "'s Stats\nLevel: " + str(randlevel) + "\nHP: " + str(hlt) + "\nDexterity: " + str(dex) + "\nIntelligence: " + str(itl) + "\nStrength: " + str(sre) + "\nConstitution: " + str(con) + "\nWisdom: " + str(wis) + "\nCharisma: " + str(cha))
+    yield from ctx.send(pokemon + "'s Stats\nLevel: " + str(randlevel) + "\nHP: " + str(hlt) + "\nDexterity: " + str(dex) + "\nIntelligence: " + str(itl) + "\nStrength: " + str(sre) + "\nConstitution: " + str(con) + "\nWisdom: " + str(wis) + "\nCharisma: " + str(cha))
+'''
 
 @bot.command()
 @asyncio.coroutine
-def timezone(time, frm, keyword, to):
+def timezone(ctx, time, frm, keyword, to):
     """Converts between timezones
     !timezone <time> <from-zone> to <to-zone>"""
     if not tz.is_timezone(frm) or not tz.is_timezone(to):
-        yield from bot.say("I don't know that timezone... sorry...")
+        yield from ctx.send("I don't know that timezone... sorry...")
         return None
     res = tz.convert_formatted(time, frm, to)
     if res:
@@ -288,9 +292,9 @@ def timezone(time, frm, keyword, to):
             cap = " on the following day"
             hr -= 24
         tzname = tz.timezone_name(to)
-        yield from bot.say("In {}, that's {}:{:-02}{}!".format(tzname, int(hr), int(min), cap))
+        yield from ctx.send("In {}, that's {}:{:-02}{}!".format(tzname, int(hr), int(min), cap))
     else:
-        yield from bot.say("Sorry... I didn't understand the time format...")
+        yield from ctx.send("Sorry... I didn't understand the time format...")
 
 @bot.command(pass_context=True)
 @asyncio.coroutine
@@ -305,17 +309,17 @@ def roll(ctx, die : str = None, name : discord.Member = None):
     try:
         res = dice.dice(die)
         if res == -1:
-            yield from bot.say("Stahp!")
+            yield from ctx.send("Stahp!")
             print("{} exceeded the limit".format(name))
         elif res is None:
-            yield from bot.say("Sorry, I don't understand that.")
+            yield from ctx.send("Sorry, I don't understand that.")
             print(("{} made invalid command {}").format(name, die))
         else:
             final, data = res
-            yield from bot.say("{} got {} (individual results: {})".format(name, final, data))
+            yield from ctx.send("{} got {} (individual results: {})".format(name, final, data))
             #print("{} got {} (individual results: {})".format(name, final, data))
     except TypeError:
-        yield from bot.say("I'm afraid that doesn't make sense...")
+        yield from ctx.send("I'm afraid that doesn't make sense...")
         traceback.print_exc()
 
 """
@@ -332,24 +336,25 @@ def roll(ctx, die : str = None, name : discord.Member = None):
     rolldie = int(dice)
 
     rand = random.randint(1,rolldie)
-    yield from bot.say(name + " rolled a D" + dice + "!\nIt's a " + str(rand))
+    yield from ctx.send(name + " rolled a D" + dice + "!\nIt's a " + str(rand))
     print(name + " rolled a D" + dice + "!\nIt's a " + str(rand) + "\n----------")
 """
 
 @bot.command()
 @asyncio.coroutine
-def votes():
+def votes(ctx):
     """How good of a bot am I?"""
     if json_data['good'] > json_data['bad']:
-        yield from bot.say("This bot is a good bot. Voted {} to {}.".format(json_data['good'], json_data['bad']))
+        yield from ctx.send("This bot is a good bot. Voted {} to {}.".format(json_data['good'], json_data['bad']))
     elif json_data['bad'] > json_data['good']:
-        yield from bot.say("This bot is a bad bot. Voted {} to {}.".format(json_data['bad'], json_data['good']))
+        yield from ctx.send("This bot is a bad bot. Voted {} to {}.".format(json_data['bad'], json_data['good']))
     else:
-        yield from bot.say("This bot is an okay bot. Voted {} to {}.".format(json_data['good'], json_data['bad']))
+        yield from ctx.send("This bot is an okay bot. Voted {} to {}.".format(json_data['good'], json_data['bad']))
 
+'''
 @bot.command()
 @asyncio.coroutine
-def volunteer(role=None):
+def volunteer(ctx, role=None):
     """Randomly selects a player"""
     if role is not None:
         role = name_to_role(role)
@@ -358,21 +363,22 @@ def volunteer(role=None):
         choices = choices.filter(lambda x: zz.of(x.roles).find(_1.id == role.id))
     choices = choices.list()
     member = random.choice(choices)
-    yield from bot.say("I choose {}!".format(member.name))
+    yield from ctx.send("I choose {}!".format(member.name))
+'''
 
 @bot.command()
 @asyncio.coroutine
-def choose(vals, n='1'):
+def choose(ctx, vals, n='1'):
     """Chooses from a collection of elements.
     The values should be separated by a semicolon."""
     n = int(n)
     vals = vals.split(';')
     results = random.sample(vals, n)
-    yield from bot.say("Drawing {} items: {}.".format(n, ', '.join(results)))
+    yield from ctx.send("Drawing {} items: {}.".format(n, ', '.join(results)))
 
 @bot.command()
 @asyncio.coroutine
-def ducksay(message):
+def ducksay(ctx, message):
     """Duck says what?"""
     MAX_LEN = 50
     data = message.split(' ')
@@ -408,7 +414,7 @@ def ducksay(message):
     final += "    \\ >()_\n"
     final += "       (__)__ _\n"
     final += "```"
-    yield from bot.say(final)
+    yield from ctx.send(final)
 
 @asyncio.coroutine
 def role_manage(ctx, role_name):
@@ -420,13 +426,13 @@ def role_manage(ctx, role_name):
     role = name_to_role(role_name)
     if role:
         if role.id in role_data():
-            yield from bot.say("I'm already managing that role.")
+            yield from ctx.send("I'm already managing that role.")
         else:
             role_data()[role.id] = {}
             role_data()[role.id]['name'] = role.name
-            yield from bot.say("Okay, I'll manage {} now".format(role.name))
+            yield from ctx.send("Okay, I'll manage {} now".format(role.name))
     else:
-        yield from bot.say("I don't know of any role by that name.")
+        yield from ctx.send("I don't know of any role by that name.")
 
 @asyncio.coroutine
 def role_unmanage(ctx, role_name):
@@ -438,9 +444,9 @@ def role_unmanage(ctx, role_name):
     role = name_to_role(role_name)
     if role and role.id in role_data():
         del role_data()[role.id]
-        yield from bot.say("Okay, I'll forget about {}".format(role.name))
+        yield from ctx.send("Okay, I'll forget about {}".format(role.name))
     else:
-        yield from bot.say("I'm not managing any role by that name.")
+        yield from ctx.send("I'm not managing any role by that name.")
 
 @asyncio.coroutine
 def role_owner(ctx, cmd, role_name, *args):
@@ -450,16 +456,16 @@ def role_owner(ctx, cmd, role_name, *args):
     author = ctx.message.author
     role = name_to_role(role_name)
     if (not role) or (role.id not in role_data()):
-        yield from bot.say("I'm not managing any role by that name.")
+        yield from ctx.send("I'm not managing any role by that name.")
         return
     # Anyone can use list
     if cmd == 'list':
         result = zz.of(owner_list(ctx.message.server, role)).map(_1.display_name).list()
-        yield from bot.say("Members who own the role {}: {}".format(role.name, ', '.join(result)))
+        yield from ctx.send("Members who own the role {}: {}".format(role.name, ', '.join(result)))
         return
     # Perms
     if (not is_owner_of_role(author, role)) and (not author.server_permissions.administrator):
-        yield from bot.say("You don't have control over that role.")
+        yield from ctx.send("You don't have control over that role.")
         return
     # Make sure the owner list exists
     data = role_data()[role.id]
@@ -470,22 +476,22 @@ def role_owner(ctx, cmd, role_name, *args):
         for arg in args:
             member = find_member(ctx.message.server, arg)
             if not member:
-                yield from bot.say("I don't know a {}".format(arg))
+                yield from ctx.send("I don't know a {}".format(arg))
             elif member.id in data['owners']:
-                yield from bot.say("{} already owns {}".format(member.display_name, role.name))
+                yield from ctx.send("{} already owns {}".format(member.display_name, role.name))
             else:
                 data['owners'].append(member.id)
-                yield from bot.say("{} is now an owner of {}".format(member.display_name, role.name))
+                yield from ctx.send("{} is now an owner of {}".format(member.display_name, role.name))
     elif cmd == "remove":
         for arg in args:
             member = find_member(ctx.message.server, arg)
             if not member:
-                yield from bot.say("I don't know a {}".format(arg))
+                yield from ctx.send("I don't know a {}".format(arg))
             elif member.id in data['owners']:
                 data['owners'].remove(member.id)
-                yield from bot.say("{} no longer owns {}".format(member.display_name, role.name))
+                yield from ctx.send("{} no longer owns {}".format(member.display_name, role.name))
             else:
-                yield from bot.say("{} doesn't own {}".format(member.display_name, role.name))
+                yield from ctx.send("{} doesn't own {}".format(member.display_name, role.name))
 
 @asyncio.coroutine
 def role_voluntary(ctx, role_name):
@@ -493,17 +499,17 @@ def role_voluntary(ctx, role_name):
     author = ctx.message.author
     role = name_to_role(role_name)
     if (not role) or (role.id not in role_data()):
-        yield from bot.say("I'm not managing any role by that name.")
+        yield from ctx.send("I'm not managing any role by that name.")
         return
     # Perms
     if (not is_owner_of_role(author, role)) and (not author.server_permissions.administrator):
-        yield from bot.say("You don't have control over that role.")
+        yield from ctx.send("You don't have control over that role.")
         return
     if is_voluntary_role(role):
-        yield from bot.say("{} is no longer a voluntary role".format(role.name))
+        yield from ctx.send("{} is no longer a voluntary role".format(role.name))
         role_data()[role.id]['voluntary'] = False
     else:
-        yield from bot.say("Members can now join and leave {} freely".format(role.name))
+        yield from ctx.send("Members can now join and leave {} freely".format(role.name))
         role_data()[role.id]['voluntary'] = True
 
 @asyncio.coroutine
@@ -512,15 +518,15 @@ def role_volunteer(ctx, role_name):
     author = ctx.message.author
     role = name_to_role(role_name)
     if (not role) or (role.id not in role_data()):
-        yield from bot.say("I'm not managing any role by that name.")
+        yield from ctx.send("I'm not managing any role by that name.")
         return
     if not is_voluntary_role(role):
-        yield from bot.say("You can't volunteer for that role")
+        yield from ctx.send("You can't volunteer for that role")
     elif role in author.roles:
-        yield from bot.say("You already belong to that role")
+        yield from ctx.send("You already belong to that role")
     else:
         yield from bot.add_roles(author, role)
-        yield from bot.say("You are now in {}, {}".format(role.name, author.display_name))
+        yield from ctx.send("You are now in {}, {}".format(role.name, author.display_name))
 
 @asyncio.coroutine
 def role_unvolunteer(ctx, role_name):
@@ -528,15 +534,15 @@ def role_unvolunteer(ctx, role_name):
     author = ctx.message.author
     role = name_to_role(role_name)
     if (not role) or (role.id not in role_data()):
-        yield from bot.say("I'm not managing any role by that name.")
+        yield from ctx.send("I'm not managing any role by that name.")
         return
     if not is_voluntary_role(role):
-        yield from bot.say("You can't unvolunteer for that role")
+        yield from ctx.send("You can't unvolunteer for that role")
     elif role in author.roles:
         yield from bot.remove_roles(author, role)
-        yield from bot.say("You are no longer {}, {}".format(role.name, author.display_name))
+        yield from ctx.send("You are no longer {}, {}".format(role.name, author.display_name))
     else:
-        yield from bot.say("You don't have that role")
+        yield from ctx.send("You don't have that role")
 
 @asyncio.coroutine
 def role_add(ctx, role_name, *args):
@@ -544,21 +550,21 @@ def role_add(ctx, role_name, *args):
     author = ctx.message.author
     role = name_to_role(role_name)
     if (not role) or (role.id not in role_data()):
-        yield from bot.say("I'm not managing any role by that name.")
+        yield from ctx.send("I'm not managing any role by that name.")
         return
     # Perms
     if (not is_owner_of_role(author, role)) and (not author.server_permissions.administrator):
-        yield from bot.say("You don't have control over that role.")
+        yield from ctx.send("You don't have control over that role.")
         return
     for arg in args:
         member = find_member(ctx.message.server, arg)
         if not member:
-            yield from bot.say("I don't know a {}".format(arg))
+            yield from ctx.send("I don't know a {}".format(arg))
         elif role in member.roles:
-            yield from bot.say("{} already has {}".format(member.display_name, role.name))
+            yield from ctx.send("{} already has {}".format(member.display_name, role.name))
         else:
             yield from bot.add_roles(member, role)
-            yield from bot.say("{} now has {}".format(member.display_name, role.name))
+            yield from ctx.send("{} now has {}".format(member.display_name, role.name))
 
 @asyncio.coroutine
 def role_remove(ctx, role_name, *args):
@@ -566,22 +572,23 @@ def role_remove(ctx, role_name, *args):
     author = ctx.message.author
     role = name_to_role(role_name)
     if (not role) or (role.id not in role_data()):
-        yield from bot.say("I'm not managing any role by that name.")
+        yield from ctx.send("I'm not managing any role by that name.")
         return
     # Perms
     if (not is_owner_of_role(author, role)) and (not author.server_permissions.administrator):
-        yield from bot.say("You don't have control over that role.")
+        yield from ctx.send("You don't have control over that role.")
         return
     for arg in args:
         member = find_member(ctx.message.server, arg)
         if not member:
-            yield from bot.say("I don't know a {}".format(arg))
+            yield from ctx.send("I don't know a {}".format(arg))
         elif role in member.roles:
             yield from bot.remove_roles(member, role)
-            yield from bot.say("{} no longer has {}".format(member.display_name, role.name))
+            yield from ctx.send("{} no longer has {}".format(member.display_name, role.name))
         else:
-            yield from bot.say("{} doesn't have {}".format(member.display_name, role.name))
+            yield from ctx.send("{} doesn't have {}".format(member.display_name, role.name))
 
+'''
 @bot.command(pass_context=True)
 @asyncio.coroutine
 def role(ctx, cmd, *args):
@@ -618,14 +625,16 @@ def role(ctx, cmd, *args):
         yield from role_add(ctx, *args)
     elif cmd == "remove":
         yield from role_remove(ctx, *args)
+'''
 
 @asyncio.coroutine
-def send_image_of_grid(cfg, channel, filename="image.png"):
+def send_image_of_grid(ctx, cfg, filename="image.png"):
     image = cfg.make_grid()
     with BytesIO() as buffer:
         image.save(buffer, 'PNG')
         buffer.seek(0)
-        yield from bot.send_file(channel, buffer, filename=filename)
+        f = discord.File(buffer, filename)
+        yield from ctx.send(file=f)
 
 @bot.command(pass_context=True)
 @asyncio.coroutine
@@ -637,7 +646,7 @@ def grid(ctx, dims="3x3"):
     """
     n, m = map(int, re.findall(r"[0-9]+", dims))
     cfg = GridConfig(rows=n, cols=m)
-    yield from send_image_of_grid(cfg, ctx.message.channel)
+    yield from send_image_of_grid(ctx, cfg)
 
 @bot.command(pass_context=True)
 @asyncio.coroutine
@@ -657,16 +666,17 @@ def codenames(ctx, wordlist=None):
     else:
         wordlist = wordlist.split(';')
         if len(wordlist) < 25:
-            yield from bot.say("Not enough words.")
+            yield from ctx.send("Not enough words.")
             return
         wordlist = CustomWordList(wordlist)
 
     manager = CodenameManager(rows=5, cols=5, words=wordlist)
     cfg  = GridConfig(rows=5, cols=5, cells=manager)
     cfg1 = GridConfig(rows=5, cols=5, cells=manager.hidden())
-    yield from send_image_of_grid(cfg , ctx.message.channel)
-    yield from send_image_of_grid(cfg1, ctx.message.channel)
+    yield from send_image_of_grid(ctx, cfg )
+    yield from send_image_of_grid(ctx, cfg1)
 
+'''
 @bot.command(pass_context=True)
 @asyncio.coroutine
 def whois(ctx, name):
@@ -686,10 +696,12 @@ def whois(ctx, name):
         embed.add_field(name="Display Name", value=member.display_name, inline=True)
         embed.add_field(name="Bot?", value=str(member.bot), inline=True)
         embed.set_thumbnail(url=member.avatar_url or member.default_avatar_url)
-        yield from bot.say(embed=embed)
+        yield from ctx.send(embed=embed)
     else:
-        yield from bot.say("I don't know a {}".format(name))
+        yield from ctx.send("I don't know a {}".format(name))
+'''
 
+'''
 @bot.command(pass_context=True)
 @asyncio.coroutine
 def assignlinkrole(ctx, role_name):
@@ -702,15 +714,16 @@ def assignlinkrole(ctx, role_name):
     """
     role = name_to_role(role_name)
     if not ctx.message.author.server_permissions.administrator:
-        yield from bot.say("You don't have permission to do that")
+        yield from ctx.send("You don't have permission to do that")
     elif role_name == "":
-        yield from bot.say("I'll no longer mess with links")
+        yield from ctx.send("I'll no longer mess with links")
         del json_data['linky']
     elif not role:
-        yield from bot.say("I don't know that role")
+        yield from ctx.send("I don't know that role")
     else:
-        yield from bot.say("I'll make sure this server stays spam-free!")
+        yield from ctx.send("I'll make sure this server stays spam-free!")
         json_data['linky'] = role.id
+'''
 
 try:
     while True:
