@@ -58,7 +58,7 @@ class RoleManagement(commands.Cog):
 
     @role.command()
     async def manage(self, ctx: Context, role_name: str) -> None:
-        # !role manage <rolename>
+        """Set up Luckbot to manage a role. Admin only."""
         author = ctx.message.author
         if not isinstance(author, discord.Member):
             return
@@ -76,7 +76,8 @@ class RoleManagement(commands.Cog):
 
     @role.command()
     async def unmanage(self, ctx: Context, role_name: str) -> None:
-        # !role unmanage <rolename>
+        """Tell Luckbot to stop managing a role. This deletes any information
+        the bot had on the role. Admin only."""
         author = ctx.message.author
         if not isinstance(author, discord.Member):
             return
@@ -90,14 +91,20 @@ class RoleManagement(commands.Cog):
 
     @role.group(invoke_without_command=True)
     async def owner(self, ctx: Context):
-        # !role owner list <rolename>
-        # !role owner add <rolename> <members>...
-        # !role owner remove <rolename> <members>...
+        """Manage the owner(s) of a role.
+
+        Anyone can use
+        !role owner list <rolename>
+
+        Admin / role owner only
+        !role owner add <rolename> <members>...
+        !role owner remove <rolename> <members>..."""
         await ctx.send_help(ctx.command)
 
     @role.command()
     async def voluntary(self, ctx: Context, role_name: str) -> None:
-        # !role voluntary <rolename>
+        """Toggle whether or not the given role can be opted into and out of.
+        Admins and role owners only."""
         author = ctx.message.author
         role = name_to_role(ctx.bot, role_name)
         if (not role) or (role.id not in json_data.roles):
@@ -116,7 +123,7 @@ class RoleManagement(commands.Cog):
 
     @role.command()
     async def volunteer(self, ctx: Context, role_name: str) -> None:
-        # !role volunteer <rolename>
+        """Volunteer for a role. Can only be used on roles which are set as voluntary."""
         author = ctx.message.author
         role = name_to_role(ctx.bot, role_name)
         if (not role) or (role.id not in json_data.roles):
@@ -134,7 +141,7 @@ class RoleManagement(commands.Cog):
 
     @role.command()
     async def unvolunteer(self, ctx: Context, role_name: str) -> None:
-        # !role unvolunteer <rolename>
+        """Opt out of a role. Can only be used on roles which are set as voluntary."""
         author = ctx.message.author
         role = name_to_role(ctx.bot, role_name)
         if (not role) or (role.id not in json_data.roles):
@@ -152,7 +159,7 @@ class RoleManagement(commands.Cog):
 
     @role.command()
     async def add(self, ctx: Context, role_name: str, *args: str) -> None:
-        # !role add <rolename> <members>...
+        """Add member(s) to a role. Admins and role owners only."""
         author = ctx.message.author
         role = name_to_role(ctx.bot, role_name)
         if (not role) or (role.id not in json_data.roles):
@@ -174,7 +181,7 @@ class RoleManagement(commands.Cog):
 
     @role.command()
     async def remove(self, ctx: Context, role_name: str, *args: str) -> None:
-        # !role remove <rolename> <members>...
+        """Remove member(s) to a role. Admins and role owners only."""
         author = ctx.message.author
         role = name_to_role(ctx.bot, role_name)
         if (not role) or (role.id not in json_data.roles):
@@ -196,6 +203,7 @@ class RoleManagement(commands.Cog):
 
     @owner.command(name='list')
     async def owner_list(self, ctx: Context, role_name: str) -> None:
+        """List all owners of a role."""
         role = name_to_role(ctx.bot, role_name)
         if (not role) or (role.id not in json_data.roles):
             await ctx.send("I'm not managing any role by that name.")
@@ -208,6 +216,7 @@ class RoleManagement(commands.Cog):
 
     @owner.command(name='add')
     async def owner_add(self, ctx: Context, role_name: str, *members: str) -> None:
+        """Add owner(s) to a role. Admins and role owners only."""
         author = ctx.message.author
         role = name_to_role(ctx.bot, role_name)
         if (not role) or (role.id not in json_data.roles):
@@ -232,6 +241,7 @@ class RoleManagement(commands.Cog):
 
     @owner.command(name='remove')
     async def owner_remove(self, ctx: Context, role_name: str, *members: str) -> None:
+        """Removes owner(s) to a role. Admins and role owners only."""
         author = ctx.message.author
         role = name_to_role(ctx.bot, role_name)
         if (not role) or (role.id not in json_data.roles):
