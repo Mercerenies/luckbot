@@ -22,6 +22,7 @@ import asyncio
 import traceback
 
 from grid import CodenameManager, GridConfig, WordList, DefaultWordList, CustomWordList
+from storage import JSONData
 import dice
 import error
 import error_handler
@@ -100,7 +101,7 @@ autoreplies = [
 ]
 # Note: This will be initialized before any code needs to access it,
 # so assume it's not None anywhere that matters.
-json_data: Dict[str, Any] = cast(Dict[str, Any], None)
+json_data: JSONData = cast(JSONData, None)
 
 LINK_RE = re.compile("https?://|discord.gg/|discordapp.com/")
 
@@ -714,7 +715,7 @@ try:
     while True:
         try:
             with open('data.json') as f:
-                json_data = json.load(f)
+                json_data = JSONData(json.load(f))
             bot.run(json_data['key'])
         except (aiohttp.ClientError,
                 aiohttp.ClientOSError,
@@ -725,7 +726,7 @@ try:
         finally:
            if json_data:
                with open('data.json', 'w') as f:
-                   json.dump(json_data, f)
+                   json.dump(json_data.data, f)
 except Exception as e:
     print("Failure:", type(e), e)
     traceback.print_exc()
