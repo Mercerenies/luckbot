@@ -1,16 +1,46 @@
 
 from permission import must_be_admin, is_admin
-from util import Context, OptionalChecked
+from util import Context, OptionalChecked, log_message
 import timezone as tz
 from storage import json_data
 
+import alakazam as zz
+from alakazam import _1, _2, _3
 import discord
 from discord.ext import commands
+import re
+
+LINK_RE = re.compile("https?://|discord.gg/|discordapp.com/")
+
+def contains_link(text: str) -> bool:
+    return bool(re.search(LINK_RE, text))
 
 class Administrative(commands.Cog, name="Administrative"):
+    _bot: commands.Bot
 
-    def __init__(self, _bot) -> None:
-        pass
+    def __init__(self, bot) -> None:
+        self._bot = bot
+
+    async def spam_check(self, message: discord.Message) -> None:
+        if message.author == self._bot.user:
+            return
+        if json_data.linky and contains_link(message.content):
+            role = json_data.linky
+            if isinstance(message.author, discord.Member):
+                if role not in zz.of(message.author.roles).map(_1.id):
+                    await message.delete()
+                    await message.author.send("You don't have permission to post links. Feel free to ask an admin for this permission :)")
+                    await log_message(self._bot, "{} (in channel #{}) just tried to post the link: {}".format(message.author, message.channel, message.content))
+
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message) -> None:
+        if message.author == self._bot.user:
+            return
+        await self.spam_check(message) # Spam checking for links
+
+    @commands.Cog.listener()
+    async def on_message_edit(self, before: discord.Message, after: discord.Message) -> None:
+        await self.spam_check(after)
 
     @commands.command()
     async def assignlinkrole(self, ctx: Context, role: OptionalChecked[discord.Role] = None) -> None:

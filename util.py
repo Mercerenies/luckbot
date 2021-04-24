@@ -1,5 +1,6 @@
 
 import alakazam as zz
+from alakazam import _1, _2, _3
 import discord
 from discord.ext import commands
 
@@ -12,6 +13,11 @@ def find_member(server: discord.Guild, name: str) -> Optional[discord.Member]:
     def match(person: discord.Member) -> bool:
         return (person.name.lower() == name or person.display_name.lower() == name)
     return zz.of(server.members).find(match)
+
+async def log_message(bot: commands.Bot, text: str) -> None:
+    channel = zz.of(bot.get_all_channels()).find(_1.name == "bot-logs")
+    if channel:
+        await channel.send(text)
 
 Context = discord.ext.commands.Context
 

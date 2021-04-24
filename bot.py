@@ -43,37 +43,11 @@ intents.members = True
 bot = commands.Bot(command_prefix='!', description=description, intents=intents)
 cog.add_cogs(bot)
 
-LINK_RE = re.compile("https?://|discord.gg/|discordapp.com/")
-
-def contains_link(text: str) -> bool:
-    return bool(re.search(LINK_RE, text))
-
-async def log_message(text: str) -> None:
-    channel = zz.of(bot.get_all_channels()).find(_1.name == "bot-logs")
-    if channel:
-        await channel.send(text)
-
-async def spam_check(message: discord.Message) -> None:
-    if message.author == bot.user:
-        return
-    if json_data.linky and contains_link(message.content):
-        role = json_data.linky
-        if isinstance(message.author, discord.Member):
-            if role not in zz.of(message.author.roles).map(_1.id):
-                await message.delete()
-                await message.author.send("You don't have permission to post links. Feel free to ask an admin for this permission :)")
-                await log_message("{} (in channel #{}) just tried to post the link: {}".format(message.author, message.channel, message.content))
-
 @bot.event
 async def on_message(message: discord.Message) -> None:
-    if (message.author == bot.user):
+    if message.author == bot.user:
         return
-    await spam_check(message) # Spam checking for links
     await bot.process_commands(message)
-
-@bot.event
-async def on_message_edit(before: discord.Message, after: discord.Message) -> None:
-    await spam_check(after)
 
 @bot.event
 async def on_command_error(ctx: Context, error: discord.ext.commands.CommandError) -> None:
