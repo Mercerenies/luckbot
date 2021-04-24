@@ -1,6 +1,7 @@
 
 from util import Context
 from grid import GridConfig, WordList, DefaultWordList, CustomWordList, CodenameManager
+from permission import InputsTooLarge
 
 import discord
 from discord.ext import commands
@@ -9,6 +10,8 @@ from io import BytesIO
 import re
 
 from typing import Optional
+
+MAX_GRID_SIZE = 50
 
 async def send_image_of_grid(ctx: Context, cfg: GridConfig, filename: str = "image.png") -> None:
     image = cfg.make_grid()
@@ -28,6 +31,8 @@ class GamingUtilities(commands.Cog, name="Gaming Utilities"):
 
         """
         n, m = map(int, re.findall(r"[0-9]+", dims))
+        if n > MAX_GRID_SIZE or m > MAX_GRID_SIZE:
+            raise InputsTooLarge()
         cfg = GridConfig(rows=n, cols=m)
         await send_image_of_grid(ctx, cfg)
 
