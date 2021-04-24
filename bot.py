@@ -571,8 +571,17 @@ async def role_remove(ctx: Context, role_name: str, *args: str) -> None:
             await ctx.send("{} doesn't have {}".format(member.display_name, role.name))
 
 '''
+@bot.group(invoke_without_command=True)
+async def example(ctx):
+    await ctx.send_help(example)
+
+@example.command()
+async def foobar(ctx):
+    await ctx.send("FOOBAR")
+'''
+
 @bot.command()
-async def role(ctx, cmd, *args):
+async def role(ctx: Context, cmd: str, *args: str) -> None:
     """Manages roles
 
     Anyone can use
@@ -606,7 +615,6 @@ async def role(ctx, cmd, *args):
         await role_add(ctx, *args)
     elif cmd == "remove":
         await role_remove(ctx, *args)
-'''
 
 async def send_image_of_grid(ctx: Context, cfg: GridConfig, filename: str = "image.png") -> None:
     image = cfg.make_grid()
