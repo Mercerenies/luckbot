@@ -351,16 +351,6 @@ async def ducksay(ctx: Context, message: str) -> None:
     final += "```"
     await ctx.send(final)
 
-'''
-@bot.group(invoke_without_command=True)
-async def example(ctx):
-    await ctx.send_help(example)
-
-@example.command()
-async def foobar(ctx):
-    await ctx.send("FOOBAR")
-'''
-
 async def send_image_of_grid(ctx: Context, cfg: GridConfig, filename: str = "image.png") -> None:
     image = cfg.make_grid()
     with BytesIO() as buffer:
@@ -408,9 +398,8 @@ async def codenames(ctx: Context, words: Optional[str] = None) -> None:
     await send_image_of_grid(ctx, cfg )
     await send_image_of_grid(ctx, cfg1)
 
-'''
 @bot.command()
-async def whois(ctx, name):
+async def whois(ctx: Context, member: discord.Member) -> None:
     """Identifies a member of this server.
 
     !whois <name>
@@ -419,18 +408,12 @@ async def whois(ctx, name):
     is.
 
     """
-
-    member = find_member(ctx.message.server, name)
-    if member:
-        embed = discord.Embed(title="", description="", color=0x000000)
-        embed.add_field(name="Name", value=str(member), inline=True)
-        embed.add_field(name="Display Name", value=member.display_name, inline=True)
-        embed.add_field(name="Bot?", value=str(member.bot), inline=True)
-        embed.set_thumbnail(url=member.avatar_url or member.default_avatar_url)
-        await ctx.send(embed=embed)
-    else:
-        await ctx.send("I don't know a {}".format(name))
-'''
+    embed = discord.Embed(title="", description="", color=0x000000)
+    embed.add_field(name="Name", value=str(member), inline=True)
+    embed.add_field(name="Display Name", value=member.display_name, inline=True)
+    embed.add_field(name="Bot?", value=str(member.bot), inline=True)
+    embed.set_thumbnail(url=str(member.avatar_url or member.default_avatar_url))
+    await ctx.send(embed=embed)
 
 @bot.command()
 async def assignlinkrole(ctx: Context, role: OptionalChecked[discord.Role] = None) -> None:
