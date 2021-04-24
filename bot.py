@@ -26,8 +26,7 @@ from storage import json_data, JSONData, RoleData
 from permission import is_admin, must_be_admin
 from util import find_member, OptionalChecked, Context
 import dice
-import roles
-import luck
+from cog import roles, luck
 import error
 import error_handler
 import timezone as tz
