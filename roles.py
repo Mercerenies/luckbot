@@ -35,8 +35,8 @@ def owner_list(server: discord.Guild, role: discord.Role) -> List[discord.Member
 
 class RoleManagement(commands.Cog):
 
-    @commands.command()
-    async def role(self, ctx: Context, cmd: str, *args: str) -> None:
+    @commands.group(invoke_without_command=True)
+    async def role(self, ctx: Context) -> None:
         """Manages roles
 
         Anyone can use
@@ -54,24 +54,10 @@ class RoleManagement(commands.Cog):
         Admin only
         !role manage <rolename>
         !role unmanage <rolename>"""
-        if cmd == "manage":
-            await self.role_manage(ctx, *args)
-        elif cmd == "unmanage":
-            await self.role_unmanage(ctx, *args)
-        elif cmd == "owner":
-            await self.role_owner(ctx, *args)
-        elif cmd == "voluntary":
-            await self.role_voluntary(ctx, *args)
-        elif cmd == "volunteer":
-            await self.role_volunteer(ctx, *args)
-        elif cmd == "unvolunteer":
-            await self.role_unvolunteer(ctx, *args)
-        elif cmd == "add":
-            await self.role_add(ctx, *args)
-        elif cmd == "remove":
-            await self.role_remove(ctx, *args)
+        await ctx.send_help(ctx.command)
 
-    async def role_manage(self, ctx: Context, role_name: str) -> None:
+    @role.command()
+    async def manage(self, ctx: Context, role_name: str) -> None:
         # !role manage <rolename>
         author = ctx.message.author
         if not isinstance(author, discord.Member):
@@ -88,7 +74,8 @@ class RoleManagement(commands.Cog):
         else:
             await ctx.send("I don't know of any role by that name.")
 
-    async def role_unmanage(self, ctx: Context, role_name: str) -> None:
+    @role.command()
+    async def unmanage(self, ctx: Context, role_name: str) -> None:
         # !role unmanage <rolename>
         author = ctx.message.author
         if not isinstance(author, discord.Member):
@@ -101,7 +88,8 @@ class RoleManagement(commands.Cog):
         else:
             await ctx.send("I'm not managing any role by that name.")
 
-    async def role_owner(self, ctx: Context, cmd: str, role_name: str, *args: str):
+    @role.command()
+    async def owner(self, ctx: Context, cmd: str, role_name: str, *args: str):
         # !role owner list <rolename>
         # !role owner add <rolename> <members>...
         # !role owner remove <rolename> <members>...
@@ -146,7 +134,8 @@ class RoleManagement(commands.Cog):
                 else:
                     await ctx.send("{} doesn't own {}".format(member.display_name, role.name))
 
-    async def role_voluntary(self, ctx: Context, role_name: str) -> None:
+    @role.command()
+    async def voluntary(self, ctx: Context, role_name: str) -> None:
         # !role voluntary <rolename>
         author = ctx.message.author
         role = name_to_role(ctx.bot, role_name)
@@ -164,7 +153,8 @@ class RoleManagement(commands.Cog):
             await ctx.send("Members can now join and leave {} freely".format(role.name))
             json_data.roles[role.id].voluntary = True
 
-    async def role_volunteer(self, ctx: Context, role_name: str) -> None:
+    @role.command()
+    async def volunteer(self, ctx: Context, role_name: str) -> None:
         # !role volunteer <rolename>
         author = ctx.message.author
         role = name_to_role(ctx.bot, role_name)
@@ -181,7 +171,8 @@ class RoleManagement(commands.Cog):
             await author.add_roles(role)
             await ctx.send("You are now in {}, {}".format(role.name, author.display_name))
 
-    async def role_unvolunteer(self, ctx: Context, role_name: str) -> None:
+    @role.command()
+    async def unvolunteer(self, ctx: Context, role_name: str) -> None:
         # !role unvolunteer <rolename>
         author = ctx.message.author
         role = name_to_role(ctx.bot, role_name)
@@ -198,7 +189,8 @@ class RoleManagement(commands.Cog):
         else:
             await ctx.send("You don't have that role")
 
-    async def role_add(self, ctx: Context, role_name: str, *args: str) -> None:
+    @role.command()
+    async def add(self, ctx: Context, role_name: str, *args: str) -> None:
         # !role add <rolename> <members>...
         author = ctx.message.author
         role = name_to_role(ctx.bot, role_name)
@@ -219,7 +211,8 @@ class RoleManagement(commands.Cog):
                 await member.add_roles(role)
                 await ctx.send("{} now has {}".format(member.display_name, role.name))
 
-    async def role_remove(self, ctx: Context, role_name: str, *args: str) -> None:
+    @role.command()
+    async def remove(self, ctx: Context, role_name: str, *args: str) -> None:
         # !role remove <rolename> <members>...
         author = ctx.message.author
         role = name_to_role(ctx.bot, role_name)
