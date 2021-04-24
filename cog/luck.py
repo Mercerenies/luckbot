@@ -21,17 +21,13 @@ class LuckCommands(commands.Cog, name="Luck-Based Commands"):
         if die is None:
             die = "d6"
         try:
-            try:
-                res = dice.dice(die)
-                if res is None:
-                    await ctx.send("Sorry, I don't understand that.")
-                    print(("{} made invalid command {}").format(target_name, die))
-                else:
-                    final, data = res
-                    await ctx.send("{} got {} (individual results: {})".format(target_name, final, data))
-            except dice.TooManyDice:
-                await ctx.send("Stahp!")
-                print("{} exceeded the limit".format(ctx.author))
+            res = dice.dice(die)
+            if res is None:
+                await ctx.send("Sorry, I don't understand that.")
+                print(("{} made invalid command {}").format(target_name, die))
+            else:
+                final, data = res
+                await ctx.send("{} got {} (individual results: {})".format(target_name, final, data))
         except TypeError:
             await ctx.send("I'm afraid that doesn't make sense...")
             traceback.print_exc()

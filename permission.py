@@ -3,6 +3,9 @@ import error
 
 import discord
 
+class InputsTooLarge(Exception):
+    pass
+
 def is_admin(member: discord.abc.User) -> bool:
     if not isinstance(member, discord.Member):
         return False

@@ -1,4 +1,6 @@
 
+from permission import InputsTooLarge
+
 import re
 import random
 from numbers import Complex
@@ -7,13 +9,14 @@ from alakazam import _1, _2, _3, _4, _5
 
 from typing import List, TypeVar, Generic, Sequence, Union, Callable, Optional, Tuple
 
-class TooManyDice(Exception):
+class TooManyDice(InputsTooLarge):
     pass
 
 T = TypeVar('T')
 T_co = TypeVar('T_co', covariant=True)
 
 MAXIMUM = 40
+MAXIMUM_INDIVIDUAL = 99999
 
 class AbstractDie(Generic[T_co]):
 
@@ -175,6 +178,8 @@ def _read_die(arg: str) -> Optional[Tuple[Die, str]]:
         arg3 = arg2
     if y < x:
         return None
+    if x > MAXIMUM_INDIVIDUAL or y > MAXIMUM_INDIVIDUAL:
+        raise InputsTooLarge()
     return Die(n=n, x=x, y=y), arg3
 
 def _read_str(arg: str, chars: Callable[[str], Optional[Tuple[str, str]]]) -> Optional[Tuple[str, str]]:

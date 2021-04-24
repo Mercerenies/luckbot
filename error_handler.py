@@ -1,11 +1,16 @@
 
 from error import PermissionsException
+from permission import InputsTooLarge
 
 import discord.ext.commands as commands
 import discord
 import traceback
 
+from typing import TypeVar, Generic
+
 UNHANDLED_RESPONSE = "Something went wrong when I tried to evaluate that command. You'll have to check the logs for more information."
+
+T_co = TypeVar('T_co', covariant=True, bound='Response')
 
 class Response:
 
@@ -20,6 +25,9 @@ class Response:
             return self
         else:
             return other
+
+    def with_debug_output(self: T_co, debug_output: str) -> 'WithDebugOutput[T_co]':
+        return WithDebugOutput(self, debug_output)
 
 class Handled(Response):
     response_text: str
@@ -45,6 +53,21 @@ class Unhandled(Response):
     def is_handled(self) -> bool:
         return False
 
+class WithDebugOutput(Generic[T_co], Response):
+    response: T_co
+    debug_output: str
+
+    def __init__(self, response: T_co, debug_output: str) -> None:
+        self.response = response
+        self.debug_output = debug_output
+
+    async def perform(self, ctx: commands.Context) -> None:
+        await self.response.perform(ctx)
+        print(self.debug_output)
+
+    def is_handled(self) -> bool:
+        return self.response.is_handled()
+
 # This provides a bunch of attempts to get friendly user-facing error
 # messages and falls back to a generic message in case of absolute
 # failure.
@@ -69,4 +92,6 @@ def appropriate_response(ctx: commands.Context, error: Exception) -> Response:
             if h.is_handled():
                 return h
         return Unhandled(error)
+    elif isinstance(error, InputsTooLarge):
+        return Handled(f"Stahp!").with_debug_output(f"{ctx.author} exceeded the limit using command {ctx.invoked_with}!")
     return Unhandled(error)
