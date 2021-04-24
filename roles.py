@@ -88,51 +88,12 @@ class RoleManagement(commands.Cog):
         else:
             await ctx.send("I'm not managing any role by that name.")
 
-    @role.command()
-    async def owner(self, ctx: Context, cmd: str, role_name: str, *args: str):
+    @role.group(invoke_without_command=True)
+    async def owner(self, ctx: Context):
         # !role owner list <rolename>
         # !role owner add <rolename> <members>...
         # !role owner remove <rolename> <members>...
-        author = ctx.message.author
-        role = name_to_role(ctx.bot, role_name)
-        if (not role) or (role.id not in json_data.roles):
-            await ctx.send("I'm not managing any role by that name.")
-            return
-        # Anyone can use list
-        if cmd == 'list':
-            if ctx.message.guild:
-                result = zz.of(owner_list(ctx.message.guild, role)).map(_1.display_name).list()
-            else:
-                result = []
-            await ctx.send("Members who own the role {}: {}".format(role.name, ', '.join(result)))
-            return
-        # Perms
-        if (not is_owner_of_role(author, role)) and (not is_admin(author)):
-            await ctx.send("You don't have control over that role.")
-            return
-        # Make sure the owner list exists
-        data = json_data.roles[role.id]
-        # Add
-        if cmd == "add":
-            for arg in args:
-                member = ctx.message.guild and find_member(ctx.message.guild, arg)
-                if not member:
-                    await ctx.send("I don't know a {}".format(arg))
-                elif member.id in data.owners:
-                    await ctx.send("{} already owns {}".format(member.display_name, role.name))
-                else:
-                    data.owners.append(member.id)
-                    await ctx.send("{} is now an owner of {}".format(member.display_name, role.name))
-        elif cmd == "remove":
-            for arg in args:
-                member = ctx.message.guild and find_member(ctx.message.guild, arg)
-                if not member:
-                    await ctx.send("I don't know a {}".format(arg))
-                elif member.id in data.owners:
-                    data.owners.remove(member.id)
-                    await ctx.send("{} no longer owns {}".format(member.display_name, role.name))
-                else:
-                    await ctx.send("{} doesn't own {}".format(member.display_name, role.name))
+        await ctx.send_help(ctx.command)
 
     @role.command()
     async def voluntary(self, ctx: Context, role_name: str) -> None:
@@ -233,3 +194,62 @@ class RoleManagement(commands.Cog):
             else:
                 await ctx.send("{} doesn't have {}".format(member.display_name, role.name))
 
+    @owner.command(name='list')
+    async def owner_list(self, ctx: Context, role_name: str) -> None:
+        role = name_to_role(ctx.bot, role_name)
+        if (not role) or (role.id not in json_data.roles):
+            await ctx.send("I'm not managing any role by that name.")
+            return
+        if ctx.message.guild:
+            result = zz.of(owner_list(ctx.message.guild, role)).map(_1.display_name).list()
+        else:
+            result = []
+        await ctx.send("Members who own the role {}: {}".format(role.name, ', '.join(result)))
+
+    @owner.command(name='add')
+    async def owner_add(self, ctx: Context, role_name: str, *members: str) -> None:
+        author = ctx.message.author
+        role = name_to_role(ctx.bot, role_name)
+        if (not role) or (role.id not in json_data.roles):
+            await ctx.send("I'm not managing any role by that name.")
+            return
+        # Perms
+        if (not is_owner_of_role(author, role)) and (not is_admin(author)):
+            await ctx.send("You don't have control over that role.")
+            return
+        # Make sure the owner list exists
+        data = json_data.roles[role.id]
+        # Add
+        for arg in members:
+            member = ctx.message.guild and find_member(ctx.message.guild, arg)
+            if not member:
+                await ctx.send("I don't know a {}".format(arg))
+            elif member.id in data.owners:
+                await ctx.send("{} already owns {}".format(member.display_name, role.name))
+            else:
+                data.owners.append(member.id)
+                await ctx.send("{} is now an owner of {}".format(member.display_name, role.name))
+
+    @owner.command(name='remove')
+    async def owner_remove(self, ctx: Context, role_name: str, *members: str) -> None:
+        author = ctx.message.author
+        role = name_to_role(ctx.bot, role_name)
+        if (not role) or (role.id not in json_data.roles):
+            await ctx.send("I'm not managing any role by that name.")
+            return
+        # Perms
+        if (not is_owner_of_role(author, role)) and (not is_admin(author)):
+            await ctx.send("You don't have control over that role.")
+            return
+        # Make sure the owner list exists
+        data = json_data.roles[role.id]
+        # Remove
+        for arg in members:
+            member = ctx.message.guild and find_member(ctx.message.guild, arg)
+            if not member:
+                await ctx.send("I don't know a {}".format(arg))
+            elif member.id in data.owners:
+                data.owners.remove(member.id)
+                await ctx.send("{} no longer owns {}".format(member.display_name, role.name))
+            else:
+                await ctx.send("{} doesn't own {}".format(member.display_name, role.name))
