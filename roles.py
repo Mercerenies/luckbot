@@ -57,33 +57,28 @@ class RoleManagement(commands.Cog, name="Role Management"):
         await ctx.send_help(ctx.command)
 
     @role.command()
-    async def manage(self, ctx: Context, role_name: str) -> None:
+    async def manage(self, ctx: Context, role: discord.Role) -> None:
         """Set up Luckbot to manage a role. Admin only."""
         author = ctx.message.author
         if not isinstance(author, discord.Member):
             return
         must_be_admin(author)
-        role = name_to_role(ctx.bot, role_name)
-        if role:
-            if role.id in json_data.roles:
-                await ctx.send("I'm already managing that role.")
-            else:
-                json_data.roles[role.id] = RoleData()
-                json_data.roles[role.id].name = role.name
-                await ctx.send("Okay, I'll manage {} now".format(role.name))
+        if role.id in json_data.roles:
+            await ctx.send("I'm already managing that role.")
         else:
-            await ctx.send("I don't know of any role by that name.")
+            json_data.roles[role.id] = RoleData()
+            json_data.roles[role.id].name = role.name
+            await ctx.send("Okay, I'll manage {} now".format(role.name))
 
     @role.command()
-    async def unmanage(self, ctx: Context, role_name: str) -> None:
+    async def unmanage(self, ctx: Context, role: discord.Role) -> None:
         """Tell Luckbot to stop managing a role. This deletes any information
         the bot had on the role. Admin only."""
         author = ctx.message.author
         if not isinstance(author, discord.Member):
             return
         must_be_admin(author)
-        role = name_to_role(ctx.bot, role_name)
-        if role and role.id in json_data.roles:
+        if role.id in json_data.roles:
             del json_data.roles[role.id]
             await ctx.send("Okay, I'll forget about {}".format(role.name))
         else:
@@ -102,12 +97,11 @@ class RoleManagement(commands.Cog, name="Role Management"):
         await ctx.send_help(ctx.command)
 
     @role.command()
-    async def voluntary(self, ctx: Context, role_name: str) -> None:
+    async def voluntary(self, ctx: Context, role: discord.Role) -> None:
         """Toggle whether or not the given role can be opted into and out of.
         Admins and role owners only."""
         author = ctx.message.author
-        role = name_to_role(ctx.bot, role_name)
-        if (not role) or (role.id not in json_data.roles):
+        if role.id not in json_data.roles:
             await ctx.send("I'm not managing any role by that name.")
             return
         # Perms
@@ -122,11 +116,10 @@ class RoleManagement(commands.Cog, name="Role Management"):
             json_data.roles[role.id].voluntary = True
 
     @role.command()
-    async def volunteer(self, ctx: Context, role_name: str) -> None:
+    async def volunteer(self, ctx: Context, role: discord.Role) -> None:
         """Volunteer for a role. Can only be used on roles which are set as voluntary."""
         author = ctx.message.author
-        role = name_to_role(ctx.bot, role_name)
-        if (not role) or (role.id not in json_data.roles):
+        if role.id not in json_data.roles:
             await ctx.send("I'm not managing any role by that name.")
             return
         if not is_voluntary_role(role):
@@ -140,11 +133,10 @@ class RoleManagement(commands.Cog, name="Role Management"):
             await ctx.send("You are now in {}, {}".format(role.name, author.display_name))
 
     @role.command()
-    async def unvolunteer(self, ctx: Context, role_name: str) -> None:
+    async def unvolunteer(self, ctx: Context, role: discord.Role) -> None:
         """Opt out of a role. Can only be used on roles which are set as voluntary."""
         author = ctx.message.author
-        role = name_to_role(ctx.bot, role_name)
-        if (not role) or (role.id not in json_data.roles):
+        if role.id not in json_data.roles:
             await ctx.send("I'm not managing any role by that name.")
             return
         if not is_voluntary_role(role):
@@ -158,11 +150,10 @@ class RoleManagement(commands.Cog, name="Role Management"):
             await ctx.send("You don't have that role")
 
     @role.command()
-    async def add(self, ctx: Context, role_name: str, *args: str) -> None:
+    async def add(self, ctx: Context, role: discord.Role, *args: str) -> None:
         """Add member(s) to a role. Admins and role owners only."""
         author = ctx.message.author
-        role = name_to_role(ctx.bot, role_name)
-        if (not role) or (role.id not in json_data.roles):
+        if role.id not in json_data.roles:
             await ctx.send("I'm not managing any role by that name.")
             return
         # Perms
@@ -180,11 +171,10 @@ class RoleManagement(commands.Cog, name="Role Management"):
                 await ctx.send("{} now has {}".format(member.display_name, role.name))
 
     @role.command()
-    async def remove(self, ctx: Context, role_name: str, *args: str) -> None:
+    async def remove(self, ctx: Context, role: discord.Role, *args: str) -> None:
         """Remove member(s) to a role. Admins and role owners only."""
         author = ctx.message.author
-        role = name_to_role(ctx.bot, role_name)
-        if (not role) or (role.id not in json_data.roles):
+        if role.id not in json_data.roles:
             await ctx.send("I'm not managing any role by that name.")
             return
         # Perms
@@ -202,10 +192,9 @@ class RoleManagement(commands.Cog, name="Role Management"):
                 await ctx.send("{} doesn't have {}".format(member.display_name, role.name))
 
     @owner.command(name='list')
-    async def owner_list(self, ctx: Context, role_name: str) -> None:
+    async def owner_list(self, ctx: Context, role: discord.Role) -> None:
         """List all owners of a role."""
-        role = name_to_role(ctx.bot, role_name)
-        if (not role) or (role.id not in json_data.roles):
+        if role.id not in json_data.roles:
             await ctx.send("I'm not managing any role by that name.")
             return
         if ctx.message.guild:
@@ -215,11 +204,10 @@ class RoleManagement(commands.Cog, name="Role Management"):
         await ctx.send("Members who own the role {}: {}".format(role.name, ', '.join(result)))
 
     @owner.command(name='add')
-    async def owner_add(self, ctx: Context, role_name: str, *members: str) -> None:
+    async def owner_add(self, ctx: Context, role: discord.Role, *members: str) -> None:
         """Add owner(s) to a role. Admins and role owners only."""
         author = ctx.message.author
-        role = name_to_role(ctx.bot, role_name)
-        if (not role) or (role.id not in json_data.roles):
+        if role.id not in json_data.roles:
             await ctx.send("I'm not managing any role by that name.")
             return
         # Perms
@@ -240,11 +228,10 @@ class RoleManagement(commands.Cog, name="Role Management"):
                 await ctx.send("{} is now an owner of {}".format(member.display_name, role.name))
 
     @owner.command(name='remove')
-    async def owner_remove(self, ctx: Context, role_name: str, *members: str) -> None:
+    async def owner_remove(self, ctx: Context, role: discord.Role, *members: str) -> None:
         """Removes owner(s) to a role. Admins and role owners only."""
         author = ctx.message.author
-        role = name_to_role(ctx.bot, role_name)
-        if (not role) or (role.id not in json_data.roles):
+        if role.id not in json_data.roles:
             await ctx.send("I'm not managing any role by that name.")
             return
         # Perms
