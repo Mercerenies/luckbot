@@ -22,7 +22,7 @@ import asyncio
 import traceback
 
 from grid import CodenameManager, GridConfig, WordList, DefaultWordList, CustomWordList
-from storage import JSONData, RoleData
+from storage import json_data, JSONData, RoleData
 from permission import is_admin, must_be_admin
 from util import find_member
 import dice
@@ -79,9 +79,6 @@ autoreplies = [
     (r"\bgood night\b", "Good night! :city_sunset:"),
     (r"\bbad bot\b", bad_bot)
 ]
-# Note: This will be initialized before any code needs to access it,
-# so assume it's not None anywhere that matters.
-json_data: JSONData = cast(JSONData, None)
 
 LINK_RE = re.compile("https?://|discord.gg/|discordapp.com/")
 
@@ -691,7 +688,7 @@ try:
     while True:
         try:
             with open('data.json') as f:
-                json_data = JSONData(json.load(f))
+                json_data.data = json.load(f)
             bot.run(json_data.key)
         except (aiohttp.ClientError,
                 aiohttp.ClientOSError,

@@ -34,8 +34,8 @@ class dict_delegator(Generic[T, S_co]):
 class JSONData(WithData[Any]):
     data: Dict[str, Any]
 
-    def __init__(self, data: Dict[str, Any]) -> None:
-        self.data = data
+    def __init__(self, data: Optional[Dict[str, Any]] = None) -> None:
+        self.data = data or {}
 
     @dict_delegator
     def good(self) -> int:
@@ -94,3 +94,7 @@ class RoleData(WithData[Any]):
     @dict_delegator
     def name(self) -> str:
         return ''
+
+# TODO It's just a flat global right now. We should store this in the
+# main file and pass it only to functions that need it.
+json_data = JSONData()
