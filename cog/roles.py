@@ -33,6 +33,9 @@ def owner_list(server: discord.Guild, role: discord.Role) -> List[discord.Member
 
 class RoleManagement(commands.Cog, name="Role Management"):
 
+    def __init__(self, _bot) -> None:
+        pass
+
     @commands.group(invoke_without_command=True)
     async def role(self, ctx: Context) -> None:
         """Manages roles

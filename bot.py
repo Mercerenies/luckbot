@@ -43,22 +43,6 @@ intents.members = True
 bot = commands.Bot(command_prefix='!', description=description, intents=intents)
 cog.add_cogs(bot)
 
-async def good_bot(message: discord.Message) -> None:
-    json_data.good += 1
-    await message.channel.send("You have voted this bot as a good bot. :robot:")
-
-async def bad_bot(message: discord.Message) -> None:
-    json_data.bad += 1
-    await message.channel.send("You have voted this bot as a bad bot. :frowning2:")
-
-autoreplies = [
-    (r"\bgood bot\b", good_bot),
-    (r"\bgood morning\b", "Good morning! :sunrise:"),
-    (r"\bgood afternoon\b", "Good afternoon! :sunny:"),
-    (r"\bgood night\b", "Good night! :city_sunset:"),
-    (r"\bbad bot\b", bad_bot)
-]
-
 LINK_RE = re.compile("https?://|discord.gg/|discordapp.com/")
 
 def contains_link(text: str) -> bool:
@@ -84,16 +68,7 @@ async def spam_check(message: discord.Message) -> None:
 async def on_message(message: discord.Message) -> None:
     if (message.author == bot.user):
         return
-    # Spam checking for links
-    await spam_check(message)
-    # Autoreplies :)
-    if (str(message.channel) == "general") or (str(message.channel) == "bot_testing-grounds"):
-        for ptn, reply in autoreplies:
-            if re.search(ptn, message.content, re.I):
-                if callable(reply):
-                    await reply(message)
-                else:
-                    await message.channel.send(reply)
+    await spam_check(message) # Spam checking for links
     await bot.process_commands(message)
 
 @bot.event

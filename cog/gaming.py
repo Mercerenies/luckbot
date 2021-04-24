@@ -23,6 +23,9 @@ async def send_image_of_grid(ctx: Context, cfg: GridConfig, filename: str = "ima
 
 class GamingUtilities(commands.Cog, name="Gaming Utilities"):
 
+    def __init__(self, _bot) -> None:
+        pass
+
     @commands.command()
     async def grid(self, ctx: Context, dims: str = "3x3") -> None:
         """Generates a grid.

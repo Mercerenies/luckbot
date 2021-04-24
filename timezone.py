@@ -34,7 +34,7 @@ def convert(hrs: int, mins: int, frm: str, to: str) -> Tuple[int, int]:
     return (int(res // 1), int((res % 1) * 60))
 
 def convert_formatted(time: str, frm: str, to: str) -> Optional[Tuple[int, int]]:
-    match = re.match(r'^(\d+)(?::(\d+))? ?(am|pm|AM|PM)?', time)
+    match = re.match(r'^(\d+)(?::(\d+))? ?(am|pm|AM|PM)?$', time)
     if not match:
         return None
     grp = match.groups()

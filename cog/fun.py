@@ -6,8 +6,44 @@ import random
 import discord
 from discord.ext import commands
 import alakazam as zz
+import re
+
+async def good_bot(message: discord.Message) -> None:
+    json_data.good += 1
+    await message.channel.send("You have voted this bot as a good bot. :robot:")
+
+async def bad_bot(message: discord.Message) -> None:
+    json_data.bad += 1
+    await message.channel.send("You have voted this bot as a bad bot. :frowning2:")
+
+AUTOREPLIES = [
+    (r"\bgood bot\b", good_bot),
+    (r"\bgood morning\b", "Good morning! :sunrise:"),
+    (r"\bgood afternoon\b", "Good afternoon! :sunny:"),
+    (r"\bgood night\b", "Good night! :city_sunset:"),
+    (r"\bbad bot\b", bad_bot)
+]
+
+RESPONSE_CHANNELS = ["general", "bot_testing-grounds", "off-topic", "general-game-discussion"]
 
 class DiscordFun(commands.Cog, name="Discord Fun"):
+    _bot: commands.Bot
+
+    def __init__(self, bot: commands.Bot) -> None:
+        self._bot = bot
+
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message) -> None:
+        if message.author == self._bot.user:
+            return
+        # Autoreplies :)
+        if str(message.channel) in RESPONSE_CHANNELS:
+            for ptn, reply in AUTOREPLIES:
+                if re.search(ptn, message.content, re.I):
+                    if callable(reply):
+                        await reply(message)
+                    else:
+                        await message.channel.send(reply)
 
     @commands.command()
     async def genitem(self, ctx: Context, item_name: str):

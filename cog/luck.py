@@ -12,6 +12,9 @@ import random
 
 class LuckCommands(commands.Cog, name="Luck-Based Commands"):
 
+    def __init__(self, _bot) -> None:
+        pass
+
     @commands.command()
     async def roll(self, ctx: Context, die: str = None, name: OptionalChecked[discord.Member] = None) -> None:
         """Rolls one or more dice"""

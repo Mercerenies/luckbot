@@ -9,11 +9,14 @@ from discord.ext import commands
 
 class Administrative(commands.Cog, name="Administrative"):
 
+    def __init__(self, _bot) -> None:
+        pass
+
     @commands.command()
     async def assignlinkrole(self, ctx: Context, role: OptionalChecked[discord.Role] = None) -> None:
         """Determines the role used for spam-checking against links.
 
-        !assignlinkrole <role_name>
+        !assignlinkrole [role]
 
         (admin only)
 
@@ -70,7 +73,7 @@ class Administrative(commands.Cog, name="Administrative"):
             await ctx.send("Sorry... I didn't understand the time format...")
 
     @commands.command()
-    async def playing(self, ctx: Context, *, mygame: str = ''):
+    async def playing(self, ctx: Context, mygame: str = ''):
         """Sets my presence tagline.
 
         (admin only)"""
