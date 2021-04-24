@@ -26,7 +26,7 @@ from storage import json_data, JSONData, RoleData
 from permission import is_admin, must_be_admin
 from util import find_member, OptionalChecked, Context
 import dice
-from cog import roles, luck, admin, fun, gaming
+import cog
 import error
 import error_handler
 import timezone as tz
@@ -41,11 +41,7 @@ Games server.'''
 intents = discord.Intents.default()
 intents.members = True
 bot = commands.Bot(command_prefix='!', description=description, intents=intents)
-bot.add_cog(roles.RoleManagement())
-bot.add_cog(luck.LuckCommands())
-bot.add_cog(admin.Administrative())
-bot.add_cog(fun.DiscordFun())
-bot.add_cog(gaming.GamingUtilities())
+cog.add_cogs(bot)
 
 async def good_bot(message: discord.Message) -> None:
     json_data.good += 1
