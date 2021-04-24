@@ -22,7 +22,7 @@ import asyncio
 import traceback
 
 from grid import CodenameManager, GridConfig, WordList, DefaultWordList, CustomWordList
-from storage import JSONData
+from storage import JSONData, RoleData
 import dice
 import error
 import error_handler
@@ -36,7 +36,10 @@ Context = discord.ext.commands.Context
 
 description = '''Hi, I'm Luckbot! I provide several useful utilities to the Discord
 Games server.'''
-bot = commands.Bot(command_prefix='!', description=description)
+
+intents = discord.Intents.default()
+intents.members = True
+bot = commands.Bot(command_prefix='!', description=description, intents=intents)
 
 async def good_bot(message: discord.Message) -> None:
     json_data.good += 1
@@ -49,10 +52,6 @@ async def bad_bot(message: discord.Message) -> None:
 def name_to_role(name: str) -> discord.Role:
     return zz.of(bot.guilds).map(_1.roles).flatten().find(_1.name == name)
 
-# TODO Type this
-def role_data() -> Any:
-    return json_data['roles']
-
 def is_admin(member: discord.abc.User) -> bool:
     if not isinstance(member, discord.Member):
         return False
@@ -63,28 +62,22 @@ def must_be_admin(member: discord.abc.User) -> None:
         raise error.PermissionsException()
 
 def is_owner_of_role(member: Union[discord.Member, discord.User], role: discord.Role) -> bool:
-    if role.id not in role_data():
+    if role.id not in json_data.roles:
         return False
-    data = role_data()[role.id]
-    if 'owners' not in data:
-        return False
-    return member.id in data['owners']
+    data = json_data.roles[role.id]
+    return member.id in data.owners
 
 def is_voluntary_role(role: discord.Role) -> bool:
-    if role.id not in role_data():
+    if role.id not in json_data.roles:
         return False
-    data = role_data()[role.id]
-    if 'voluntary' not in data:
-        return False
-    return data['voluntary']
+    data = json_data.roles[role.id]
+    return data.voluntary
 
 def owner_list(server: discord.Guild, role: discord.Role) -> List[discord.Member]:
-    if role.id not in role_data():
+    if role.id not in json_data.roles:
         return []
-    data = role_data()[role.id]
-    if 'owners' not in data:
-        return []
-    return zz.of(data['owners']).map(server.get_member).filter(_1).list()
+    data = json_data.roles[role.id]
+    return zz.of(data.owners).map(server.get_member).filter(_1).list()
 
 def find_member(server: discord.Guild, name: str) -> Optional[discord.Member]:
     name = name.lower()
@@ -408,11 +401,11 @@ async def role_manage(ctx: Context, role_name: str) -> None:
     must_be_admin(author)
     role = name_to_role(role_name)
     if role:
-        if role.id in role_data():
+        if role.id in json_data.roles:
             await ctx.send("I'm already managing that role.")
         else:
-            role_data()[role.id] = {}
-            role_data()[role.id]['name'] = role.name
+            json_data.roles[role.id] = RoleData()
+            json_data.roles[role.id].name = role.name
             await ctx.send("Okay, I'll manage {} now".format(role.name))
     else:
         await ctx.send("I don't know of any role by that name.")
@@ -424,8 +417,8 @@ async def role_unmanage(ctx: Context, role_name: str) -> None:
         return
     must_be_admin(author)
     role = name_to_role(role_name)
-    if role and role.id in role_data():
-        del role_data()[role.id]
+    if role and role.id in json_data.roles:
+        del json_data.roles[role.id]
         await ctx.send("Okay, I'll forget about {}".format(role.name))
     else:
         await ctx.send("I'm not managing any role by that name.")
@@ -436,7 +429,7 @@ async def role_owner(ctx: Context, cmd: str, role_name: str, *args: str):
     # !role owner remove <rolename> <members>...
     author = ctx.message.author
     role = name_to_role(role_name)
-    if (not role) or (role.id not in role_data()):
+    if (not role) or (role.id not in json_data.roles):
         await ctx.send("I'm not managing any role by that name.")
         return
     # Anyone can use list
@@ -452,27 +445,25 @@ async def role_owner(ctx: Context, cmd: str, role_name: str, *args: str):
         await ctx.send("You don't have control over that role.")
         return
     # Make sure the owner list exists
-    data = role_data()[role.id]
-    if 'owners' not in data:
-        data['owners'] = []
+    data = json_data.roles[role.id]
     # Add
     if cmd == "add":
         for arg in args:
             member = ctx.message.guild and find_member(ctx.message.guild, arg)
             if not member:
                 await ctx.send("I don't know a {}".format(arg))
-            elif member.id in data['owners']:
+            elif member.id in data.owners:
                 await ctx.send("{} already owns {}".format(member.display_name, role.name))
             else:
-                data['owners'].append(member.id)
+                data.owners.append(member.id)
                 await ctx.send("{} is now an owner of {}".format(member.display_name, role.name))
     elif cmd == "remove":
         for arg in args:
             member = ctx.message.guild and find_member(ctx.message.guild, arg)
             if not member:
                 await ctx.send("I don't know a {}".format(arg))
-            elif member.id in data['owners']:
-                data['owners'].remove(member.id)
+            elif member.id in data.owners:
+                data.owners.remove(member.id)
                 await ctx.send("{} no longer owns {}".format(member.display_name, role.name))
             else:
                 await ctx.send("{} doesn't own {}".format(member.display_name, role.name))
@@ -481,7 +472,7 @@ async def role_voluntary(ctx: Context, role_name: str) -> None:
     # !role voluntary <rolename>
     author = ctx.message.author
     role = name_to_role(role_name)
-    if (not role) or (role.id not in role_data()):
+    if (not role) or (role.id not in json_data.roles):
         await ctx.send("I'm not managing any role by that name.")
         return
     # Perms
@@ -490,16 +481,16 @@ async def role_voluntary(ctx: Context, role_name: str) -> None:
         return
     if is_voluntary_role(role):
         await ctx.send("{} is no longer a voluntary role".format(role.name))
-        role_data()[role.id]['voluntary'] = False
+        json_data.roles[role.id].voluntary = False
     else:
         await ctx.send("Members can now join and leave {} freely".format(role.name))
-        role_data()[role.id]['voluntary'] = True
+        json_data.roles[role.id].voluntary = True
 
 async def role_volunteer(ctx: Context, role_name: str) -> None:
     # !role volunteer <rolename>
     author = ctx.message.author
     role = name_to_role(role_name)
-    if (not role) or (role.id not in role_data()):
+    if (not role) or (role.id not in json_data.roles):
         await ctx.send("I'm not managing any role by that name.")
         return
     if not is_voluntary_role(role):
@@ -516,7 +507,7 @@ async def role_unvolunteer(ctx: Context, role_name: str) -> None:
     # !role unvolunteer <rolename>
     author = ctx.message.author
     role = name_to_role(role_name)
-    if (not role) or (role.id not in role_data()):
+    if (not role) or (role.id not in json_data.roles):
         await ctx.send("I'm not managing any role by that name.")
         return
     if not is_voluntary_role(role):
@@ -533,7 +524,7 @@ async def role_add(ctx: Context, role_name: str, *args: str) -> None:
     # !role add <rolename> <members>...
     author = ctx.message.author
     role = name_to_role(role_name)
-    if (not role) or (role.id not in role_data()):
+    if (not role) or (role.id not in json_data.roles):
         await ctx.send("I'm not managing any role by that name.")
         return
     # Perms
@@ -554,7 +545,7 @@ async def role_remove(ctx: Context, role_name: str, *args: str) -> None:
     # !role remove <rolename> <members>...
     author = ctx.message.author
     role = name_to_role(role_name)
-    if (not role) or (role.id not in role_data()):
+    if (not role) or (role.id not in json_data.roles):
         await ctx.send("I'm not managing any role by that name.")
         return
     # Perms

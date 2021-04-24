@@ -1,5 +1,5 @@
 
-from typing import Dict, Any, Union, Callable, TypeVar, Generic, Optional
+from typing import Dict, Any, Union, Callable, TypeVar, Generic, Optional, List
 
 # Manager for the JSON storage data
 
@@ -20,10 +20,9 @@ class dict_delegator(Generic[T, S_co]):
         return self.func.__name__
 
     def __get__(self, instance: T, _owner):
-        if self.name in instance.data:
-            return instance.data[self.name]
-        else:
-            return self.func(instance) # type: ignore
+        if self.name not in instance.data:
+            instance.data[self.name] = self.func(instance) # type: ignore
+        return instance.data[self.name]
 
     def __set__(self, instance, value):
         instance.data[self.name] = value
@@ -35,17 +34,8 @@ class dict_delegator(Generic[T, S_co]):
 class JSONData(WithData[Any]):
     data: Dict[str, Any]
 
-    def __init__(self, data):
+    def __init__(self, data: Dict[str, Any]) -> None:
         self.data = data
-
-    def __getitem__(self, idx):
-        return self.data[idx]
-
-    def __setitem__(self, idx, v):
-        self.data[idx] = v
-
-    def __contains__(self, idx):
-        return idx in self.data
 
     @dict_delegator
     def good(self) -> int:
@@ -62,3 +52,45 @@ class JSONData(WithData[Any]):
     @dict_delegator
     def key(self) -> str:
         return ""
+
+    @property
+    def roles(self) -> 'RoleJSONCollection':
+        if 'roles' not in self.data:
+            self.data['roles'] = {}
+        return RoleJSONCollection(self.data['roles'])
+
+class RoleJSONCollection(WithData[Any]):
+    data: Dict[str, Any]
+
+    def __init__(self, data: Dict[str, Any]) -> None:
+        self.data = data
+
+    def __contains__(self, id: int) -> bool:
+        return str(id) in self.data
+
+    def __getitem__(self, id: int) -> 'RoleData':
+        return RoleData(self.data[str(id)])
+
+    def __setitem__(self, id: int, v: 'RoleData') -> None:
+        self.data[str(id)] = v.data
+
+    def __delitem__(self, id: int) -> None:
+        del self.data[str(id)]
+
+class RoleData(WithData[Any]):
+    data: Dict[str, Any]
+
+    def __init__(self, data: Optional[Dict[str, Any]] = None) -> None:
+        self.data = data or {}
+
+    @dict_delegator
+    def owners(self) -> List[int]:
+        return []
+
+    @dict_delegator
+    def voluntary(self) -> bool:
+        return False
+
+    @dict_delegator
+    def name(self) -> str:
+        return ''
