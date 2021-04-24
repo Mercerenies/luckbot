@@ -296,17 +296,18 @@ async def roll(ctx, die: str = None, name: discord.Member = None):
     if die is None:
         die = "d6"
     try:
-        res = dice.dice(die)
-        if res == -1:
+        try:
+            res = dice.dice(die)
+            if res is None:
+                await ctx.send("Sorry, I don't understand that.")
+                print(("{} made invalid command {}").format(name, die))
+            else:
+                final, data = res
+                await ctx.send("{} got {} (individual results: {})".format(name, final, data))
+                #print("{} got {} (individual results: {})".format(name, final, data))
+        except dice.TooManyDice:
             await ctx.send("Stahp!")
             print("{} exceeded the limit".format(name))
-        elif res is None:
-            await ctx.send("Sorry, I don't understand that.")
-            print(("{} made invalid command {}").format(name, die))
-        else:
-            final, data = res
-            await ctx.send("{} got {} (individual results: {})".format(name, final, data))
-            #print("{} got {} (individual results: {})".format(name, final, data))
     except TypeError:
         await ctx.send("I'm afraid that doesn't make sense...")
         traceback.print_exc()
