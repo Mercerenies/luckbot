@@ -48,9 +48,12 @@ class Administrative(commands.Cog, name="Administrative"):
     async def timezone(self, ctx: Context, time: str, frm: str, keyword: str, to: str) -> None:
         """Converts between timezones
         !timezone <time> <from-zone> to <to-zone>"""
-        if not tz.is_timezone(frm) or not tz.is_timezone(to):
-            await ctx.send("I don't know that timezone... sorry...")
-            return None
+        if not tz.is_timezone(frm):
+            await ctx.send(f"I don't know the timezone '{frm}'... sorry...")
+            return
+        if not tz.is_timezone(to):
+            await ctx.send(f"I don't know the timezone '{to}'... sorry...")
+            return
         res = tz.convert_formatted(time, frm, to)
         if res:
             hr, min = res
