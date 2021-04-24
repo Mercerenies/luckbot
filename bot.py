@@ -22,7 +22,7 @@ import cog
 import error_handler
 
 description = '''Hi, I'm Luckbot! I provide several useful utilities to the Discord
-Games server.'''
+Games server. You can read more about me at https://github.com/Mercerenies/luckbot/wiki'''
 
 intents = discord.Intents.default()
 intents.members = True
