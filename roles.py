@@ -33,7 +33,7 @@ def owner_list(server: discord.Guild, role: discord.Role) -> List[discord.Member
     data = json_data.roles[role.id]
     return zz.of(data.owners).map(server.get_member).filter(_1).list()
 
-class RoleManagement(commands.Cog):
+class RoleManagement(commands.Cog, name="Role Management"):
 
     @commands.group(invoke_without_command=True)
     async def role(self, ctx: Context) -> None:

@@ -121,82 +121,80 @@ async def playing(ctx: Context, *, mygame: str = ''):
     game = discord.Game(name=mygame) if mygame != '' else None
     await bot.change_presence(activity=game)
 
-'''
 @bot.command()
 async def genitem(ctx, *, item_name: str):
     """Generates an item"""
     #0 = Dex, 1 = Intr, 2 = Str, 3 = Cont, 4 = Wis
     stat_int = random.randint(0, 4)
     stat_range = random.randint(-3, 10)
-    
+
     if ('dumb' in item_name):
         stat_int = 1
         stat_range = random.randint(-5, -1)
-    
+
     if ('intelligence' in item_name):
         stat_int = 1
         stat_range = random.randint(1, 10)
-        
+
     if ('weakness' in item_name):
         stat_int = 2
         stat_range = random.randint(-5, -1)
-    
+
     if ('strength' in item_name):
         stat_int = 2
         stat_range = random.randint(1, 10)
-        
+
     if ('slow' in item_name):
         stat_int = 0
         stat_range = random.randint(-5, -1)
-    
+
     if ('speed' in item_name):
         stat_int = 0
         stat_range = random.randint(1, 10)
-    
+
     if ('swiftness' in item_name):
         stat_int = 0
         stat_range = random.randint(1, 10)
-    
+
     if ('drain' in item_name):
         stat_int = 3
         stat_range = random.randint(-5, -1)
-    
+
     if ('protection' in item_name):
         stat_int = 3
         stat_range = random.randint(1, 10)
-        
+
     if ('ignorance' in item_name):
         stat_int = 4
         stat_range = random.randint(-5, -1)
-    
+
     if ('wisdom' in item_name):
         stat_int = 4
         stat_range = random.randint(1, 10)
-    
+
     if (stat_range == 0):
         stat_range = 1
     stat = ""
     if (stat_int == 0):
         stat = "Dexterity"
-        
+
     if (stat_int == 1):
         stat = "Intelligence"
-    
+
     if (stat_int == 2):
         stat = "Strength"
-    
+
     if (stat_int == 3):
         stat = "Constitution"
-        
+
     if (stat_int == 4):
         stat = "Wisdom"
-        
+
     if (stat_range < 0):
         await ctx.send(str(item_name) + "\n" + stat + ": " + str(stat_range))
-        
+
     if (stat_range > 0):
         await ctx.send(str(item_name) + "\n" + stat + ": +" + str(stat_range))
-        
 
 @bot.command()
 async def genchar(ctx, minlevel : int, maxlevel : int, pokemon : str):
@@ -238,7 +236,6 @@ async def genchar(ctx, minlevel : int, maxlevel : int, pokemon : str):
     xpr = hlt - (randlevel * 3)
 
     await ctx.send(pokemon + "'s Stats\nLevel: " + str(randlevel) + "\nHP: " + str(hlt) + "\nDexterity: " + str(dex) + "\nIntelligence: " + str(itl) + "\nStrength: " + str(sre) + "\nConstitution: " + str(con) + "\nWisdom: " + str(wis) + "\nCharisma: " + str(cha))
-'''
 
 @bot.command()
 async def timezone(ctx: Context, time: str, frm: str, keyword: str, to: str) -> None:
