@@ -24,7 +24,7 @@ import traceback
 from grid import CodenameManager, GridConfig, WordList, DefaultWordList, CustomWordList
 from storage import json_data, JSONData, RoleData
 from permission import is_admin, must_be_admin
-from util import find_member
+from util import find_member, OptionalChecked
 import dice
 import roles
 import error
@@ -294,19 +294,15 @@ async def votes(ctx: Context) -> None:
     else:
         await ctx.send("This bot is an okay bot. Voted {} to {}.".format(json_data.good, json_data.bad))
 
-'''
 @bot.command()
-async def volunteer(ctx, role=None):
+async def volunteer(ctx, role: OptionalChecked[discord.Role] = None):
     """Randomly selects a player"""
-    if role is not None:
-        role = roles.name_to_role(bot, role)
     choices = zz.of(bot.get_all_members())
     if role:
         choices = choices.filter(lambda x: zz.of(x.roles).find(_1.id == role.id))
     choices = choices.list()
     member = random.choice(choices)
     await ctx.send("I choose {}!".format(member.name))
-'''
 
 @bot.command()
 async def choose(ctx: Context, vals: str, n: int = 1) -> None:
