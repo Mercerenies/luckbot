@@ -23,6 +23,7 @@ import traceback
 
 from grid import CodenameManager, GridConfig, WordList, DefaultWordList, CustomWordList
 from storage import JSONData, RoleData
+from permission import is_admin, must_be_admin
 import dice
 import error
 import error_handler
@@ -51,15 +52,6 @@ async def bad_bot(message: discord.Message) -> None:
 
 def name_to_role(name: str) -> discord.Role:
     return zz.of(bot.guilds).map(_1.roles).flatten().find(_1.name == name)
-
-def is_admin(member: discord.abc.User) -> bool:
-    if not isinstance(member, discord.Member):
-        return False
-    return member.guild_permissions.administrator
-
-def must_be_admin(member: discord.abc.User) -> None:
-    if not is_admin(member):
-        raise error.PermissionsException()
 
 def is_owner_of_role(member: Union[discord.Member, discord.User], role: discord.Role) -> bool:
     if role.id not in json_data.roles:
