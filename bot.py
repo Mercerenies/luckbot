@@ -26,6 +26,7 @@ from storage import json_data, JSONData, RoleData
 from permission import is_admin, must_be_admin
 from util import find_member
 import dice
+import roles
 import error
 import error_handler
 import timezone as tz
@@ -50,27 +51,6 @@ async def good_bot(message: discord.Message) -> None:
 async def bad_bot(message: discord.Message) -> None:
     json_data.bad += 1
     await message.channel.send("You have voted this bot as a bad bot. :frowning2:")
-
-def name_to_role(name: str) -> discord.Role:
-    return zz.of(bot.guilds).map(_1.roles).flatten().find(_1.name == name)
-
-def is_owner_of_role(member: Union[discord.Member, discord.User], role: discord.Role) -> bool:
-    if role.id not in json_data.roles:
-        return False
-    data = json_data.roles[role.id]
-    return member.id in data.owners
-
-def is_voluntary_role(role: discord.Role) -> bool:
-    if role.id not in json_data.roles:
-        return False
-    data = json_data.roles[role.id]
-    return data.voluntary
-
-def owner_list(server: discord.Guild, role: discord.Role) -> List[discord.Member]:
-    if role.id not in json_data.roles:
-        return []
-    data = json_data.roles[role.id]
-    return zz.of(data.owners).map(server.get_member).filter(_1).list()
 
 autoreplies = [
     (r"\bgood bot\b", good_bot),
@@ -321,7 +301,7 @@ async def votes(ctx: Context) -> None:
 async def volunteer(ctx, role=None):
     """Randomly selects a player"""
     if role is not None:
-        role = name_to_role(role)
+        role = roles.name_to_role(bot, role)
     choices = zz.of(bot.get_all_members())
     if role:
         choices = choices.filter(lambda x: zz.of(x.roles).find(_1.id == role.id))
@@ -383,7 +363,7 @@ async def role_manage(ctx: Context, role_name: str) -> None:
     if not isinstance(author, discord.Member):
         return
     must_be_admin(author)
-    role = name_to_role(role_name)
+    role = roles.name_to_role(bot, role_name)
     if role:
         if role.id in json_data.roles:
             await ctx.send("I'm already managing that role.")
@@ -400,7 +380,7 @@ async def role_unmanage(ctx: Context, role_name: str) -> None:
     if not isinstance(author, discord.Member):
         return
     must_be_admin(author)
-    role = name_to_role(role_name)
+    role = roles.name_to_role(bot, role_name)
     if role and role.id in json_data.roles:
         del json_data.roles[role.id]
         await ctx.send("Okay, I'll forget about {}".format(role.name))
@@ -412,20 +392,20 @@ async def role_owner(ctx: Context, cmd: str, role_name: str, *args: str):
     # !role owner add <rolename> <members>...
     # !role owner remove <rolename> <members>...
     author = ctx.message.author
-    role = name_to_role(role_name)
+    role = roles.name_to_role(bot, role_name)
     if (not role) or (role.id not in json_data.roles):
         await ctx.send("I'm not managing any role by that name.")
         return
     # Anyone can use list
     if cmd == 'list':
         if ctx.message.guild:
-            result = zz.of(owner_list(ctx.message.guild, role)).map(_1.display_name).list()
+            result = zz.of(roles.owner_list(ctx.message.guild, role)).map(_1.display_name).list()
         else:
             result = []
         await ctx.send("Members who own the role {}: {}".format(role.name, ', '.join(result)))
         return
     # Perms
-    if (not is_owner_of_role(author, role)) and (not is_admin(author)):
+    if (not roles.is_owner_of_role(author, role)) and (not is_admin(author)):
         await ctx.send("You don't have control over that role.")
         return
     # Make sure the owner list exists
@@ -455,15 +435,15 @@ async def role_owner(ctx: Context, cmd: str, role_name: str, *args: str):
 async def role_voluntary(ctx: Context, role_name: str) -> None:
     # !role voluntary <rolename>
     author = ctx.message.author
-    role = name_to_role(role_name)
+    role = roles.name_to_role(bot, role_name)
     if (not role) or (role.id not in json_data.roles):
         await ctx.send("I'm not managing any role by that name.")
         return
     # Perms
-    if (not is_owner_of_role(author, role)) and (not is_admin(author)):
+    if (not roles.is_owner_of_role(author, role)) and (not is_admin(author)):
         await ctx.send("You don't have control over that role.")
         return
-    if is_voluntary_role(role):
+    if roles.is_voluntary_role(role):
         await ctx.send("{} is no longer a voluntary role".format(role.name))
         json_data.roles[role.id].voluntary = False
     else:
@@ -473,11 +453,11 @@ async def role_voluntary(ctx: Context, role_name: str) -> None:
 async def role_volunteer(ctx: Context, role_name: str) -> None:
     # !role volunteer <rolename>
     author = ctx.message.author
-    role = name_to_role(role_name)
+    role = roles.name_to_role(bot, role_name)
     if (not role) or (role.id not in json_data.roles):
         await ctx.send("I'm not managing any role by that name.")
         return
-    if not is_voluntary_role(role):
+    if not roles.is_voluntary_role(role):
         await ctx.send("You can't volunteer for that role")
     elif not isinstance(author, discord.Member):
         await ctx.send("Cannot manage roles in this channel")
@@ -490,11 +470,11 @@ async def role_volunteer(ctx: Context, role_name: str) -> None:
 async def role_unvolunteer(ctx: Context, role_name: str) -> None:
     # !role unvolunteer <rolename>
     author = ctx.message.author
-    role = name_to_role(role_name)
+    role = roles.name_to_role(bot, role_name)
     if (not role) or (role.id not in json_data.roles):
         await ctx.send("I'm not managing any role by that name.")
         return
-    if not is_voluntary_role(role):
+    if not roles.is_voluntary_role(role):
         await ctx.send("You can't unvolunteer for that role")
     elif not isinstance(author, discord.Member):
         await ctx.send("Cannot manage roles in this channel")
@@ -507,12 +487,12 @@ async def role_unvolunteer(ctx: Context, role_name: str) -> None:
 async def role_add(ctx: Context, role_name: str, *args: str) -> None:
     # !role add <rolename> <members>...
     author = ctx.message.author
-    role = name_to_role(role_name)
+    role = roles.name_to_role(bot, role_name)
     if (not role) or (role.id not in json_data.roles):
         await ctx.send("I'm not managing any role by that name.")
         return
     # Perms
-    if (not is_owner_of_role(author, role)) and (not is_admin(author)):
+    if (not roles.is_owner_of_role(author, role)) and (not is_admin(author)):
         await ctx.send("You don't have control over that role.")
         return
     for arg in args:
@@ -528,12 +508,12 @@ async def role_add(ctx: Context, role_name: str, *args: str) -> None:
 async def role_remove(ctx: Context, role_name: str, *args: str) -> None:
     # !role remove <rolename> <members>...
     author = ctx.message.author
-    role = name_to_role(role_name)
+    role = roles.name_to_role(bot, role_name)
     if (not role) or (role.id not in json_data.roles):
         await ctx.send("I'm not managing any role by that name.")
         return
     # Perms
-    if (not is_owner_of_role(author, role)) and (not is_admin(author)):
+    if (not roles.is_owner_of_role(author, role)) and (not is_admin(author)):
         await ctx.send("You don't have control over that role.")
         return
     for arg in args:
@@ -672,7 +652,7 @@ async def assignlinkrole(ctx: Context, role_name: str) -> None:
     (admin only)
 
     """
-    role = name_to_role(role_name)
+    role = roles.name_to_role(bot, role_name)
     if not is_admin(ctx.message.author):
         await ctx.send("You don't have permission to do that")
     elif role_name == "":
