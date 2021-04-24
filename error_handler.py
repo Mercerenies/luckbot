@@ -63,4 +63,10 @@ def appropriate_response(ctx: commands.Context, error: Exception) -> Response:
         return Handled(f"I don't know of any role called '{error.argument}'.")
     elif isinstance(error, commands.MemberNotFound):
         return Handled(f"I don't know of any member called '{error.argument}'.")
+    elif isinstance(error, commands.BadUnionArgument):
+        for err in error.errors:
+            h = appropriate_response(ctx, err)
+            if h.is_handled():
+                return h
+        return Unhandled(error)
     return Unhandled(error)
