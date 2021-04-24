@@ -58,3 +58,7 @@ class JSONData(WithData[Any]):
     @dict_delegator
     def linky(self) -> Optional[str]:
         return None
+
+    @dict_delegator
+    def key(self) -> str:
+        return ""

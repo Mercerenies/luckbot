@@ -332,12 +332,12 @@ async def roll(ctx: Context, die: str = None, name: Optional[discord.Member] = N
 @bot.command()
 async def votes(ctx: Context) -> None:
     """How good of a bot am I?"""
-    if json_data['good'] > json_data['bad']:
-        await ctx.send("This bot is a good bot. Voted {} to {}.".format(json_data['good'], json_data['bad']))
-    elif json_data['bad'] > json_data['good']:
-        await ctx.send("This bot is a bad bot. Voted {} to {}.".format(json_data['bad'], json_data['good']))
+    if json_data.good > json_data.bad:
+        await ctx.send("This bot is a good bot. Voted {} to {}.".format(json_data.good, json_data.bad))
+    elif json_data.bad > json_data.good:
+        await ctx.send("This bot is a bad bot. Voted {} to {}.".format(json_data.bad, json_data.good))
     else:
-        await ctx.send("This bot is an okay bot. Voted {} to {}.".format(json_data['good'], json_data['bad']))
+        await ctx.send("This bot is an okay bot. Voted {} to {}.".format(json_data.good, json_data.bad))
 
 '''
 @bot.command()
@@ -714,7 +714,7 @@ try:
         try:
             with open('data.json') as f:
                 json_data = JSONData(json.load(f))
-            bot.run(json_data['key'])
+            bot.run(json_data.key)
         except (aiohttp.ClientError,
                 aiohttp.ClientOSError,
                 TimeoutError,
