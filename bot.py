@@ -24,6 +24,7 @@ import traceback
 from grid import CodenameManager, GridConfig, WordList, DefaultWordList, CustomWordList
 from storage import JSONData, RoleData
 from permission import is_admin, must_be_admin
+from util import find_member
 import dice
 import error
 import error_handler
@@ -70,12 +71,6 @@ def owner_list(server: discord.Guild, role: discord.Role) -> List[discord.Member
         return []
     data = json_data.roles[role.id]
     return zz.of(data.owners).map(server.get_member).filter(_1).list()
-
-def find_member(server: discord.Guild, name: str) -> Optional[discord.Member]:
-    name = name.lower()
-    def match(person: discord.Member) -> bool:
-        return (person.name.lower() == name or person.display_name.lower() == name)
-    return zz.of(server.members).find(match)
 
 autoreplies = [
     (r"\bgood bot\b", good_bot),
