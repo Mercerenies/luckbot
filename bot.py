@@ -21,11 +21,15 @@ import aiohttp
 import asyncio
 import traceback
 
-from grid import CodenameManager, GridConfig, DefaultWordList, CustomWordList
+from grid import CodenameManager, GridConfig, WordList, DefaultWordList, CustomWordList
 import dice
 import timezone as tz
 import alakazam as zz
 from alakazam import _1, _2, _3, _4, _5
+
+from typing import Dict, Any, cast, List, Optional, Tuple, Union
+
+Context = discord.ext.commands.Context
 
 class PermissionsException(Exception):
     pass
@@ -34,27 +38,31 @@ description = '''Hi, I'm Luckbot! I provide several useful utilities to the Disc
 Games server.'''
 bot = commands.Bot(command_prefix='!', description=description)
 
-async def good_bot(message):
+async def good_bot(message: discord.Message) -> None:
     json_data['good'] += 1
     await message.channel.send("You have voted this bot as a good bot. :robot:")
 
-async def bad_bot(message):
+async def bad_bot(message: discord.Message) -> None:
     json_data['bad'] += 1
     await message.channel.send("You have voted this bot as a bad bot. :frowning2:")
 
-def name_to_role(name):
-    return zz.of(bot.servers).map(_1.roles).flatten().find(_1.name == name)
+def name_to_role(name: str) -> discord.Role:
+    return zz.of(bot.guilds).map(_1.roles).flatten().find(_1.name == name)
 
-def role_data():
+# TODO Type this
+def role_data() -> Any:
     return json_data['roles']
 
-def must_be_admin(member):
+def is_admin(member: discord.abc.User) -> bool:
     if not isinstance(member, discord.Member):
-        raise PermissionsException()
-    if not member.server_permissions.administrator:
+        return False
+    return member.guild_permissions.administrator
+
+def must_be_admin(member: discord.abc.User) -> None:
+    if not is_admin(member):
         raise PermissionsException()
 
-def is_owner_of_role(member, role):
+def is_owner_of_role(member: Union[discord.Member, discord.User], role: discord.Role) -> bool:
     if role.id not in role_data():
         return False
     data = role_data()[role.id]
@@ -62,7 +70,7 @@ def is_owner_of_role(member, role):
         return False
     return member.id in data['owners']
 
-def is_voluntary_role(role):
+def is_voluntary_role(role: discord.Role) -> bool:
     if role.id not in role_data():
         return False
     data = role_data()[role.id]
@@ -70,7 +78,7 @@ def is_voluntary_role(role):
         return False
     return data['voluntary']
 
-def owner_list(server, role):
+def owner_list(server: discord.Guild, role: discord.Role) -> List[discord.Member]:
     if role.id not in role_data():
         return []
     data = role_data()[role.id]
@@ -78,9 +86,9 @@ def owner_list(server, role):
         return []
     return zz.of(data['owners']).map(server.get_member).filter(_1).list()
 
-def find_member(server, name):
+def find_member(server: discord.Guild, name: str) -> Optional[discord.Member]:
     name = name.lower()
-    def match(person):
+    def match(person: discord.Member) -> bool:
         return (person.name.lower() == name or person.display_name.lower() == name)
     return zz.of(server.members).find(match)
 
@@ -91,30 +99,33 @@ autoreplies = [
     (r"\bgood night\b", "Good night! :city_sunset:"),
     (r"\bbad bot\b", bad_bot)
 ]
-json_data = None
+# Note: This will be initialized before any code needs to access it,
+# so assume it's not None anywhere that matters.
+json_data: Dict[str, Any] = cast(Dict[str, Any], None)
 
 LINK_RE = re.compile("https?://|discord.gg/|discordapp.com/")
 
-def contains_link(text):
+def contains_link(text: str) -> bool:
     return bool(re.search(LINK_RE, text))
 
-async def log_message(text):
+async def log_message(text: str) -> None:
     channel = zz.of(bot.get_all_channels()).find(_1.name == "bot-logs")
     if channel:
-        await bot.send_message(channel, text)
+        await channel.send(text)
 
-async def spam_check(message):
+async def spam_check(message: discord.Message) -> None:
     if message.author == bot.user:
         return
     if 'linky' in json_data and contains_link(message.content):
         role = json_data['linky']
-        if role not in zz.of(message.author.roles).map(_1.id):
-            await bot.delete_message(message)
-            await bot.send_message(message.author, "You don't have permission to post links. Feel free to ask an admin for this permission :)")
-            await log_message("{} (in channel #{}) just tried to post the link: {}".format(message.author, message.channel, message.content))
+        if isinstance(message.author, discord.Member):
+            if role not in zz.of(message.author.roles).map(_1.id):
+                await message.delete()
+                await message.author.send("You don't have permission to post links. Feel free to ask an admin for this permission :)")
+                await log_message("{} (in channel #{}) just tried to post the link: {}".format(message.author, message.channel, message.content))
 
 @bot.event
-async def on_message(message):
+async def on_message(message: discord.Message) -> None:
     if (message.author == bot.user):
         return
     # Spam checking for links
@@ -130,20 +141,22 @@ async def on_message(message):
     await bot.process_commands(message)
 
 @bot.event
-async def on_message_edit(before, after):
+async def on_message_edit(before: discord.Message, after: discord.Message) -> None:
     await spam_check(after)
 
 @bot.event
-async def on_ready():
+async def on_ready() -> None:
     print('Logged in as')
     print(bot.user.name)
     print(bot.user.id)
     print('------')
 
 @bot.command()
-async def playing(ctx, *, mygame : str):
+async def playing(ctx: Context, *, mygame: str = ''):
     """Sets my presence tagline"""
-    await bot.change_presence(activity=discord.Game(name=str(mygame)))
+    must_be_admin(ctx.author)
+    game = discord.Game(name=mygame) if mygame != '' else None
+    await bot.change_presence(activity=game)
 
 '''
 @bot.command()
@@ -265,7 +278,7 @@ async def genchar(ctx, minlevel : int, maxlevel : int, pokemon : str):
 '''
 
 @bot.command()
-async def timezone(ctx, time, frm, keyword, to):
+async def timezone(ctx: Context, time: str, frm: str, keyword: str, to: str) -> None:
     """Converts between timezones
     !timezone <time> <from-zone> to <to-zone>"""
     if not tz.is_timezone(frm) or not tz.is_timezone(to):
@@ -287,11 +300,10 @@ async def timezone(ctx, time, frm, keyword, to):
         await ctx.send("Sorry... I didn't understand the time format...")
 
 @bot.command()
-async def roll(ctx, die: str = None, name: discord.Member = None):
+async def roll(ctx: Context, die: str = None, name: Optional[discord.Member] = None) -> None:
     """Rolls one or more dice"""
 
-    if name == None:
-        name = ctx.message.author
+    target_name: object = name or ctx.message.author
 
     if die is None:
         die = "d6"
@@ -312,26 +324,8 @@ async def roll(ctx, die: str = None, name: discord.Member = None):
         await ctx.send("I'm afraid that doesn't make sense...")
         traceback.print_exc()
 
-"""
-    if die is None:
-        die = '6'
-
-    if name==None:
-        name = str(ctx.message.author.nick)
-
-    if (name=="None"):
-        name = '{0.name}'.format(ctx.message.author)
-
-    dice = die.replace("d", "")
-    rolldie = int(dice)
-
-    rand = random.randint(1,rolldie)
-    await ctx.send(name + " rolled a D" + dice + "!\nIt's a " + str(rand))
-    print(name + " rolled a D" + dice + "!\nIt's a " + str(rand) + "\n----------")
-"""
-
 @bot.command()
-async def votes(ctx):
+async def votes(ctx: Context) -> None:
     """How good of a bot am I?"""
     if json_data['good'] > json_data['bad']:
         await ctx.send("This bot is a good bot. Voted {} to {}.".format(json_data['good'], json_data['bad']))
@@ -355,16 +349,15 @@ async def volunteer(ctx, role=None):
 '''
 
 @bot.command()
-async def choose(ctx, vals, n='1'):
+async def choose(ctx: Context, vals: str, n: int = 1) -> None:
     """Chooses from a collection of elements.
     The values should be separated by a semicolon."""
-    n = int(n)
-    vals = vals.split(';')
-    results = random.sample(vals, n)
+    vals1 = vals.split(';')
+    results = random.sample(vals1, n)
     await ctx.send("Drawing {} items: {}.".format(n, ', '.join(results)))
 
 @bot.command()
-async def ducksay(ctx, message):
+async def ducksay(ctx: Context, message: str) -> None:
     """Duck says what?"""
     MAX_LEN = 50
     data = message.split(' ')
@@ -402,7 +395,7 @@ async def ducksay(ctx, message):
     final += "```"
     await ctx.send(final)
 
-async def role_manage(ctx, role_name):
+async def role_manage(ctx: Context, role_name: str) -> None:
     # !role manage <rolename>
     author = ctx.message.author
     if not isinstance(author, discord.Member):
@@ -419,7 +412,7 @@ async def role_manage(ctx, role_name):
     else:
         await ctx.send("I don't know of any role by that name.")
 
-async def role_unmanage(ctx, role_name):
+async def role_unmanage(ctx: Context, role_name: str) -> None:
     # !role unmanage <rolename>
     author = ctx.message.author
     if not isinstance(author, discord.Member):
@@ -432,7 +425,7 @@ async def role_unmanage(ctx, role_name):
     else:
         await ctx.send("I'm not managing any role by that name.")
 
-async def role_owner(ctx, cmd, role_name, *args):
+async def role_owner(ctx: Context, cmd: str, role_name: str, *args: str):
     # !role owner list <rolename>
     # !role owner add <rolename> <members>...
     # !role owner remove <rolename> <members>...
@@ -443,11 +436,14 @@ async def role_owner(ctx, cmd, role_name, *args):
         return
     # Anyone can use list
     if cmd == 'list':
-        result = zz.of(owner_list(ctx.message.server, role)).map(_1.display_name).list()
+        if ctx.message.guild:
+            result = zz.of(owner_list(ctx.message.guild, role)).map(_1.display_name).list()
+        else:
+            result = []
         await ctx.send("Members who own the role {}: {}".format(role.name, ', '.join(result)))
         return
     # Perms
-    if (not is_owner_of_role(author, role)) and (not author.server_permissions.administrator):
+    if (not is_owner_of_role(author, role)) and (not is_admin(author)):
         await ctx.send("You don't have control over that role.")
         return
     # Make sure the owner list exists
@@ -457,7 +453,7 @@ async def role_owner(ctx, cmd, role_name, *args):
     # Add
     if cmd == "add":
         for arg in args:
-            member = find_member(ctx.message.server, arg)
+            member = ctx.message.guild and find_member(ctx.message.guild, arg)
             if not member:
                 await ctx.send("I don't know a {}".format(arg))
             elif member.id in data['owners']:
@@ -467,7 +463,7 @@ async def role_owner(ctx, cmd, role_name, *args):
                 await ctx.send("{} is now an owner of {}".format(member.display_name, role.name))
     elif cmd == "remove":
         for arg in args:
-            member = find_member(ctx.message.server, arg)
+            member = ctx.message.guild and find_member(ctx.message.guild, arg)
             if not member:
                 await ctx.send("I don't know a {}".format(arg))
             elif member.id in data['owners']:
@@ -476,7 +472,7 @@ async def role_owner(ctx, cmd, role_name, *args):
             else:
                 await ctx.send("{} doesn't own {}".format(member.display_name, role.name))
 
-async def role_voluntary(ctx, role_name):
+async def role_voluntary(ctx: Context, role_name: str) -> None:
     # !role voluntary <rolename>
     author = ctx.message.author
     role = name_to_role(role_name)
@@ -484,7 +480,7 @@ async def role_voluntary(ctx, role_name):
         await ctx.send("I'm not managing any role by that name.")
         return
     # Perms
-    if (not is_owner_of_role(author, role)) and (not author.server_permissions.administrator):
+    if (not is_owner_of_role(author, role)) and (not is_admin(author)):
         await ctx.send("You don't have control over that role.")
         return
     if is_voluntary_role(role):
@@ -494,7 +490,7 @@ async def role_voluntary(ctx, role_name):
         await ctx.send("Members can now join and leave {} freely".format(role.name))
         role_data()[role.id]['voluntary'] = True
 
-async def role_volunteer(ctx, role_name):
+async def role_volunteer(ctx: Context, role_name: str) -> None:
     # !role volunteer <rolename>
     author = ctx.message.author
     role = name_to_role(role_name)
@@ -503,13 +499,15 @@ async def role_volunteer(ctx, role_name):
         return
     if not is_voluntary_role(role):
         await ctx.send("You can't volunteer for that role")
+    elif not isinstance(author, discord.Member):
+        await ctx.send("Cannot manage roles in this channel")
     elif role in author.roles:
         await ctx.send("You already belong to that role")
     else:
-        await bot.add_roles(author, role)
+        await author.add_roles(role)
         await ctx.send("You are now in {}, {}".format(role.name, author.display_name))
 
-async def role_unvolunteer(ctx, role_name):
+async def role_unvolunteer(ctx: Context, role_name: str) -> None:
     # !role unvolunteer <rolename>
     author = ctx.message.author
     role = name_to_role(role_name)
@@ -518,13 +516,15 @@ async def role_unvolunteer(ctx, role_name):
         return
     if not is_voluntary_role(role):
         await ctx.send("You can't unvolunteer for that role")
+    elif not isinstance(author, discord.Member):
+        await ctx.send("Cannot manage roles in this channel")
     elif role in author.roles:
-        await bot.remove_roles(author, role)
+        await author.remove_roles(role)
         await ctx.send("You are no longer {}, {}".format(role.name, author.display_name))
     else:
         await ctx.send("You don't have that role")
 
-async def role_add(ctx, role_name, *args):
+async def role_add(ctx: Context, role_name: str, *args: str) -> None:
     # !role add <rolename> <members>...
     author = ctx.message.author
     role = name_to_role(role_name)
@@ -532,20 +532,20 @@ async def role_add(ctx, role_name, *args):
         await ctx.send("I'm not managing any role by that name.")
         return
     # Perms
-    if (not is_owner_of_role(author, role)) and (not author.server_permissions.administrator):
+    if (not is_owner_of_role(author, role)) and (not is_admin(author)):
         await ctx.send("You don't have control over that role.")
         return
     for arg in args:
-        member = find_member(ctx.message.server, arg)
+        member = ctx.message.guild and find_member(ctx.message.guild, arg)
         if not member:
             await ctx.send("I don't know a {}".format(arg))
         elif role in member.roles:
             await ctx.send("{} already has {}".format(member.display_name, role.name))
         else:
-            await bot.add_roles(member, role)
+            await member.add_roles(role)
             await ctx.send("{} now has {}".format(member.display_name, role.name))
 
-async def role_remove(ctx, role_name, *args):
+async def role_remove(ctx: Context, role_name: str, *args: str) -> None:
     # !role remove <rolename> <members>...
     author = ctx.message.author
     role = name_to_role(role_name)
@@ -553,15 +553,15 @@ async def role_remove(ctx, role_name, *args):
         await ctx.send("I'm not managing any role by that name.")
         return
     # Perms
-    if (not is_owner_of_role(author, role)) and (not author.server_permissions.administrator):
+    if (not is_owner_of_role(author, role)) and (not is_admin(author)):
         await ctx.send("You don't have control over that role.")
         return
     for arg in args:
-        member = find_member(ctx.message.server, arg)
+        member = ctx.message.guild and find_member(ctx.message.guild, arg)
         if not member:
             await ctx.send("I don't know a {}".format(arg))
         elif role in member.roles:
-            await bot.remove_roles(member, role)
+            await member.remove_roles(role)
             await ctx.send("{} no longer has {}".format(member.display_name, role.name))
         else:
             await ctx.send("{} doesn't have {}".format(member.display_name, role.name))
@@ -604,7 +604,7 @@ async def role(ctx, cmd, *args):
         await role_remove(ctx, *args)
 '''
 
-async def send_image_of_grid(ctx, cfg, filename="image.png"):
+async def send_image_of_grid(ctx: Context, cfg: GridConfig, filename: str = "image.png") -> None:
     image = cfg.make_grid()
     with BytesIO() as buffer:
         image.save(buffer, 'PNG')
@@ -613,7 +613,7 @@ async def send_image_of_grid(ctx, cfg, filename="image.png"):
         await ctx.send(file=f)
 
 @bot.command()
-async def grid(ctx, dims="3x3"):
+async def grid(ctx: Context, dims: str = "3x3") -> None:
     """Generates a grid.
 
     !grid NxM
@@ -624,25 +624,26 @@ async def grid(ctx, dims="3x3"):
     await send_image_of_grid(ctx, cfg)
 
 @bot.command()
-async def codenames(ctx, wordlist=None):
+async def codenames(ctx: Context, words: Optional[str] = None) -> None:
     """Generates a Codenames board.
 
-    !codenames <wordlist>
+    !codenames <words>
 
-    If provided, the wordlist should be a semicolon-separated list of
+    If provided, the word list should be a semicolon-separated list of
     words to include. The list must contain at least 25 elements but
     can contain more.
 
     """
 
-    if wordlist is None:
+    wordlist: WordList
+    if words is None:
         wordlist = DefaultWordList()
     else:
-        wordlist = wordlist.split(';')
-        if len(wordlist) < 25:
+        words1 = words.split(';')
+        if len(words1) < 25:
             await ctx.send("Not enough words.")
             return
-        wordlist = CustomWordList(wordlist)
+        wordlist = CustomWordList(words1)
 
     manager = CodenameManager(rows=5, cols=5, words=wordlist)
     cfg  = GridConfig(rows=5, cols=5, cells=manager)

@@ -35,12 +35,23 @@ class CustomWordList(WordList):
     def sample(self) -> str:
         return self.words.pop()
 
-class HiddenColorsManager:
-    man: 'CodenameManager'
+class CellManager:
+
+    def text(self, i: int, j: int) -> str:
+        return ""
+
+    def foreground(self, i: int, j: int) -> str:
+        return "black"
+
+    def background(self, i: int, j: int) -> str:
+        return "white"
+
+class HiddenColorsManager(CellManager):
+    man: CellManager
     fg: str
     bg: str
 
-    def __init__(self, man: 'CodenameManager', fg: str = 'black', bg: str = 'white'):
+    def __init__(self, man: CellManager, fg: str = 'black', bg: str = 'white'):
         self.man = man
         self.fg = fg
         self.bg = bg
@@ -54,7 +65,7 @@ class HiddenColorsManager:
     def text(self, i: int, j: int) -> str:
         return self.man.text(i, j)
 
-class CodenameManager:
+class CodenameManager(CellManager):
     contents: List[List[str]]
     texts: List[List[str]]
 
@@ -94,17 +105,6 @@ class CodenameManager:
 
     def hidden(self) -> HiddenColorsManager:
         return HiddenColorsManager(self)
-
-class CellManager:
-
-    def text(self, i: int, j: int) -> str:
-        return ""
-
-    def foreground(self, i: int, j: int) -> str:
-        return "black"
-
-    def background(self, i: int, j: int) -> str:
-        return "white"
 
 class BasicCellManager(CellManager):
     _bg: str
