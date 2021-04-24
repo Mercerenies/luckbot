@@ -688,9 +688,8 @@ async def whois(ctx, name):
         await ctx.send("I don't know a {}".format(name))
 '''
 
-'''
 @bot.command()
-async def assignlinkrole(ctx, role_name):
+async def assignlinkrole(ctx: Context, role_name: str) -> None:
     """Determines the role used for spam-checking against links.
 
     !assignlinkrole <role_name>
@@ -699,17 +698,16 @@ async def assignlinkrole(ctx, role_name):
 
     """
     role = name_to_role(role_name)
-    if not ctx.message.author.server_permissions.administrator:
+    if not is_admin(ctx.message.author):
         await ctx.send("You don't have permission to do that")
     elif role_name == "":
         await ctx.send("I'll no longer mess with links")
-        del json_data['linky']
+        del json_data.linky
     elif not role:
         await ctx.send("I don't know that role")
     else:
         await ctx.send("I'll make sure this server stays spam-free!")
-        json_data['linky'] = role.id
-'''
+        json_data.linky = role.id
 
 try:
     while True:

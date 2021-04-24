@@ -29,7 +29,8 @@ class dict_delegator(Generic[T, S_co]):
         instance.data[self.name] = value
 
     def __delete__(self, instance):
-        del instance.data[self.name]
+        if self.name in instance.data:
+            del instance.data[self.name]
 
 class JSONData(WithData[Any]):
     data: Dict[str, Any]
