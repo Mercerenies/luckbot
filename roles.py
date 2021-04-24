@@ -1,7 +1,7 @@
 
 from storage import json_data, RoleData
 from permission import is_admin, must_be_admin
-from util import find_member
+from util import find_member, Context
 
 import discord
 from discord.ext import commands
@@ -9,8 +9,6 @@ import alakazam as zz
 from alakazam import _1, _2, _3, _4, _5
 
 from typing import Union, List
-
-Context = discord.ext.commands.Context
 
 def name_to_role(bot: commands.Bot, name: str) -> discord.Role:
     return zz.of(bot.guilds).map(_1.roles).flatten().find(_1.name == name)

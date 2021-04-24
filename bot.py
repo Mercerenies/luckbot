@@ -24,9 +24,10 @@ import traceback
 from grid import CodenameManager, GridConfig, WordList, DefaultWordList, CustomWordList
 from storage import json_data, JSONData, RoleData
 from permission import is_admin, must_be_admin
-from util import find_member, OptionalChecked
+from util import find_member, OptionalChecked, Context
 import dice
 import roles
+import luck
 import error
 import error_handler
 import timezone as tz
@@ -35,8 +36,6 @@ from alakazam import _1, _2, _3, _4, _5
 
 from typing import Dict, Any, cast, List, Optional, Tuple, Union
 
-Context = discord.ext.commands.Context
-
 description = '''Hi, I'm Luckbot! I provide several useful utilities to the Discord
 Games server.'''
 
@@ -44,6 +43,7 @@ intents = discord.Intents.default()
 intents.members = True
 bot = commands.Bot(command_prefix='!', description=description, intents=intents)
 bot.add_cog(roles.RoleManagement())
+bot.add_cog(luck.LuckCommands())
 
 async def good_bot(message: discord.Message) -> None:
     json_data.good += 1
@@ -260,31 +260,6 @@ async def timezone(ctx: Context, time: str, frm: str, keyword: str, to: str) -> 
         await ctx.send("Sorry... I didn't understand the time format...")
 
 @bot.command()
-async def roll(ctx: Context, die: str = None, name: Optional[discord.Member] = None) -> None:
-    """Rolls one or more dice"""
-
-    target_name: object = name or ctx.message.author
-
-    if die is None:
-        die = "d6"
-    try:
-        try:
-            res = dice.dice(die)
-            if res is None:
-                await ctx.send("Sorry, I don't understand that.")
-                print(("{} made invalid command {}").format(name, die))
-            else:
-                final, data = res
-                await ctx.send("{} got {} (individual results: {})".format(name, final, data))
-                #print("{} got {} (individual results: {})".format(name, final, data))
-        except dice.TooManyDice:
-            await ctx.send("Stahp!")
-            print("{} exceeded the limit".format(name))
-    except TypeError:
-        await ctx.send("I'm afraid that doesn't make sense...")
-        traceback.print_exc()
-
-@bot.command()
 async def votes(ctx: Context) -> None:
     """How good of a bot am I?"""
     if json_data.good > json_data.bad:
@@ -293,24 +268,6 @@ async def votes(ctx: Context) -> None:
         await ctx.send("This bot is a bad bot. Voted {} to {}.".format(json_data.bad, json_data.good))
     else:
         await ctx.send("This bot is an okay bot. Voted {} to {}.".format(json_data.good, json_data.bad))
-
-@bot.command()
-async def volunteer(ctx, role: OptionalChecked[discord.Role] = None):
-    """Randomly selects a player"""
-    choices = zz.of(bot.get_all_members())
-    if role:
-        choices = choices.filter(lambda x: zz.of(x.roles).find(_1.id == role.id))
-    choices = choices.list()
-    member = random.choice(choices)
-    await ctx.send("I choose {}!".format(member.name))
-
-@bot.command()
-async def choose(ctx: Context, vals: str, n: int = 1) -> None:
-    """Chooses from a collection of elements.
-    The values should be separated by a semicolon."""
-    vals1 = vals.split(';')
-    results = random.sample(vals1, n)
-    await ctx.send("Drawing {} items: {}.".format(n, ', '.join(results)))
 
 @bot.command()
 async def ducksay(ctx: Context, message: str) -> None:

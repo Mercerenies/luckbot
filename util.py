@@ -13,6 +13,8 @@ def find_member(server: discord.Guild, name: str) -> Optional[discord.Member]:
         return (person.name.lower() == name or person.display_name.lower() == name)
     return zz.of(server.members).find(match)
 
+Context = discord.ext.commands.Context
+
 # This bit of hackery is to reconcile a difference in the way
 # discord.py is treating type annotations and the way I want them
 # treated in some cases. discord.py treats Optional[T] (equivalently,
