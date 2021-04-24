@@ -59,4 +59,8 @@ def appropriate_response(ctx: commands.Context, error: Exception) -> Response:
         return Handled("You don't have permission to do that.")
     elif isinstance(error, commands.CommandNotFound):
         return Handled(f"Sorry, I don't know what '{ctx.invoked_with}' is.")
+    elif isinstance(error, commands.RoleNotFound):
+        return Handled(f"I don't know of any role called '{error.argument}'.")
+    elif isinstance(error, commands.MemberNotFound):
+        return Handled(f"I don't know of any member called '{error.argument}'.")
     return Unhandled(error)
