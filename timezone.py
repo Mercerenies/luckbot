@@ -29,8 +29,8 @@ class Timezone:
 
 def convert(hrs: int, mins: int, frm: str, to: str) -> Tuple[int, int]:
     t = time(hrs, mins)
-    gmt = _TIMEZONES[frm].to_gmt(t)
-    res = _TIMEZONES[to].from_gmt(gmt)
+    gmt = _TIMEZONES[frm.upper()].to_gmt(t)
+    res = _TIMEZONES[to.upper()].from_gmt(gmt)
     return (int(res // 1), int((res % 1) * 60))
 
 def convert_formatted(time: str, frm: str, to: str) -> Optional[Tuple[int, int]]:
@@ -54,7 +54,7 @@ def is_timezone(tz: str) -> bool:
 def timezone_name(tz: str) -> Optional[str]:
     if not is_timezone(tz):
         return None
-    return _TIMEZONES[tz].name
+    return _TIMEZONES[tz.upper()].name
 
 with open("timezone1.txt") as f:
     for line in f:
