@@ -23,6 +23,8 @@ import traceback
 
 from grid import CodenameManager, GridConfig, WordList, DefaultWordList, CustomWordList
 import dice
+import error
+import error_handler
 import timezone as tz
 import alakazam as zz
 from alakazam import _1, _2, _3, _4, _5
@@ -30,9 +32,6 @@ from alakazam import _1, _2, _3, _4, _5
 from typing import Dict, Any, cast, List, Optional, Tuple, Union
 
 Context = discord.ext.commands.Context
-
-class PermissionsException(Exception):
-    pass
 
 description = '''Hi, I'm Luckbot! I provide several useful utilities to the Discord
 Games server.'''
@@ -60,7 +59,7 @@ def is_admin(member: discord.abc.User) -> bool:
 
 def must_be_admin(member: discord.abc.User) -> None:
     if not is_admin(member):
-        raise PermissionsException()
+        raise error.PermissionsException()
 
 def is_owner_of_role(member: Union[discord.Member, discord.User], role: discord.Role) -> bool:
     if role.id not in role_data():
@@ -143,6 +142,11 @@ async def on_message(message: discord.Message) -> None:
 @bot.event
 async def on_message_edit(before: discord.Message, after: discord.Message) -> None:
     await spam_check(after)
+
+@bot.event
+async def on_command_error(ctx: Context, error: discord.ext.commands.CommandError) -> None:
+    response = error_handler.appropriate_response(ctx, error)
+    await response.perform(ctx)
 
 @bot.event
 async def on_ready() -> None:
