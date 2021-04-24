@@ -10,30 +10,16 @@
 
 import discord
 from discord.ext import commands
-from io import StringIO, BytesIO
-import random
-import asyncio
-import re
 import json
 import traceback
 import time
 import aiohttp
 import asyncio
-import traceback
 
-from grid import CodenameManager, GridConfig, WordList, DefaultWordList, CustomWordList
-from storage import json_data, JSONData, RoleData
-from permission import is_admin, must_be_admin
-from util import find_member, OptionalChecked, Context
-import dice
+from storage import json_data
+from util import Context
 import cog
-import error
 import error_handler
-import timezone as tz
-import alakazam as zz
-from alakazam import _1, _2, _3, _4, _5
-
-from typing import Dict, Any, cast, List, Optional, Tuple, Union
 
 description = '''Hi, I'm Luckbot! I provide several useful utilities to the Discord
 Games server.'''
