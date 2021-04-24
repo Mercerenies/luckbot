@@ -39,11 +39,11 @@ Games server.'''
 bot = commands.Bot(command_prefix='!', description=description)
 
 async def good_bot(message: discord.Message) -> None:
-    json_data['good'] += 1
+    json_data.good += 1
     await message.channel.send("You have voted this bot as a good bot. :robot:")
 
 async def bad_bot(message: discord.Message) -> None:
-    json_data['bad'] += 1
+    json_data.bad += 1
     await message.channel.send("You have voted this bot as a bad bot. :frowning2:")
 
 def name_to_role(name: str) -> discord.Role:
@@ -116,8 +116,8 @@ async def log_message(text: str) -> None:
 async def spam_check(message: discord.Message) -> None:
     if message.author == bot.user:
         return
-    if 'linky' in json_data and contains_link(message.content):
-        role = json_data['linky']
+    if json_data.linky and contains_link(message.content):
+        role = json_data.linky
         if isinstance(message.author, discord.Member):
             if role not in zz.of(message.author.roles).map(_1.id):
                 await message.delete()
