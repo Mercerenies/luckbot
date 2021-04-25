@@ -1,7 +1,7 @@
 
 from util import Context
 from grid import GridConfig, WordList, DefaultWordList, CustomWordList, CodenameManager
-from permission import InputsTooLarge
+from error import InputsTooLarge
 
 import discord
 from discord.ext import commands

@@ -1,5 +1,5 @@
 
-from permission import InputsTooLarge
+from error import InputsTooLarge
 
 import re
 import random

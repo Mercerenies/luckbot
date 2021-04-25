@@ -1,6 +1,5 @@
 
-from error import PermissionsException
-from permission import InputsTooLarge
+from error import PermissionsException, InputsTooLarge
 
 import discord.ext.commands as commands
 import discord
