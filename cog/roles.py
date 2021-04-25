@@ -1,6 +1,6 @@
 
 from storage import json_data, RoleData
-from permission import is_admin, must_be_admin
+from permission import is_admin_check, is_admin
 from util import find_member, Context
 
 import discord
@@ -58,12 +58,12 @@ class RoleManagement(commands.Cog, name="Role Management"):
         await ctx.send_help(ctx.command)
 
     @role.command()
+    @is_admin_check()
     async def manage(self, ctx: Context, role: discord.Role) -> None:
         """Set up Luckbot to manage a role. Admin only."""
         author = ctx.message.author
         if not isinstance(author, discord.Member):
             return
-        must_be_admin(author)
         if role.id in json_data.roles:
             await ctx.send("I'm already managing that role.")
         else:
@@ -72,13 +72,11 @@ class RoleManagement(commands.Cog, name="Role Management"):
             await ctx.send("Okay, I'll manage {} now".format(role.name))
 
     @role.command()
+    @is_admin_check()
     async def unmanage(self, ctx: Context, role: discord.Role) -> None:
         """Tell Luckbot to stop managing a role. This deletes any information
         the bot had on the role. Admin only."""
         author = ctx.message.author
-        if not isinstance(author, discord.Member):
-            return
-        must_be_admin(author)
         if role.id in json_data.roles:
             del json_data.roles[role.id]
             await ctx.send("Okay, I'll forget about {}".format(role.name))

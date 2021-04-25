@@ -1,5 +1,5 @@
 
-from permission import must_be_admin, is_admin, is_admin_check
+from permission import is_admin_check
 from util import Context, OptionalChecked, log_message
 import timezone as tz
 from storage import json_data
@@ -43,6 +43,7 @@ class Administrative(commands.Cog, name="Administrative"):
         await self.spam_check(after)
 
     @commands.command()
+    @is_admin_check()
     async def assignlinkrole(self, ctx: Context, role: OptionalChecked[discord.Role] = None) -> None:
         """Determines the role used for spam-checking against links.
 
@@ -51,9 +52,7 @@ class Administrative(commands.Cog, name="Administrative"):
         (admin only)
 
         """
-        if not is_admin(ctx.message.author):
-            await ctx.send("You don't have permission to do that")
-        elif not role:
+        if not role:
             await ctx.send("I'll no longer mess with links")
             del json_data.linky
         else:
