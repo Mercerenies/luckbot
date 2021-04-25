@@ -91,6 +91,8 @@ def appropriate_response(ctx: commands.Context, error: Exception) -> Response:
             if h.is_handled():
                 return h
         return Unhandled(error)
+    elif isinstance(error, commands.CheckFailure):
+        return Handled("You don't have permission to do that.")
     elif isinstance(error, InputsTooLarge):
-        return Handled(f"Stahp!").with_debug_output(f"{ctx.author} exceeded the limit using command {ctx.invoked_with}!")
+        return Handled("Stahp!").with_debug_output(f"{ctx.author} exceeded the limit using command {ctx.invoked_with}!")
     return Unhandled(error)

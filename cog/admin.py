@@ -1,5 +1,5 @@
 
-from permission import must_be_admin, is_admin
+from permission import must_be_admin, is_admin, is_admin_check
 from util import Context, OptionalChecked, log_message
 import timezone as tz
 from storage import json_data
@@ -103,6 +103,7 @@ class Administrative(commands.Cog, name="Administrative"):
             await ctx.send("Sorry... I didn't understand the time format...")
 
     @commands.command()
+    @is_admin_check()
     async def playing(self, ctx: Context, mygame: str = ''):
         """Sets my presence tagline.
 
