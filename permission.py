@@ -1,5 +1,6 @@
 
 import error
+from storage import json_data
 
 import discord
 from discord.ext import commands
@@ -20,14 +21,27 @@ else:
 class _CheckDecorator(Protocol):
     def __call__(self, __func: _F) -> _F: ...
 
+def is_owner_of_role(member: Union[discord.Member, discord.User], role: discord.Role) -> bool:
+    if role.id not in json_data.roles:
+        return False
+    data = json_data.roles[role.id]
+    return member.id in data.owners
+
 def is_admin(member: discord.abc.User) -> bool:
     if not isinstance(member, discord.Member):
         return False
     return member.guild_permissions.administrator
 
-def must_be_admin(member: discord.abc.User) -> None:
-    if not is_admin(member):
-        raise error.PermissionsException()
-
 def is_admin_check() -> _CheckDecorator:
     return commands.has_guild_permissions(administrator=True)
+
+def is_admin_or_role_owner_check() -> _CheckDecorator:
+    def test(ctx: commands.Context) -> bool:
+        if is_admin(ctx.author):
+            return True
+        if len(ctx.args) < 3:
+            return True # Invalid command and not enough info to check against role
+        if is_owner_of_role(ctx.author, ctx.args[2]):
+            return True
+        return False
+    return commands.check(test)
