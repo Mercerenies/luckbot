@@ -108,6 +108,5 @@ class Administrative(commands.Cog, name="Administrative"):
         """Sets my presence tagline.
 
         (admin only)"""
-        must_be_admin(ctx.author)
         game = discord.Game(name=mygame) if mygame != '' else None
         await ctx.bot.change_presence(activity=game)
