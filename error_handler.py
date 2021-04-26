@@ -1,5 +1,5 @@
 
-from error import PermissionsException, InputsTooLarge
+from error import PermissionsException, InputsTooLarge, UnmanagedRole
 
 import discord.ext.commands as commands
 import discord
@@ -93,6 +93,8 @@ def appropriate_response(ctx: commands.Context, error: Exception) -> Response:
         return Unhandled(error)
     elif isinstance(error, commands.CheckFailure):
         return Handled("You don't have permission to do that.")
+    elif isinstance(error, UnmanagedRole):
+        return Handled("I'm not managing that role. You'll need to have an admin use `!role manage` if you want me to manage it.")
     elif isinstance(error, InputsTooLarge):
         return Handled("Stahp!").with_debug_output(f"{ctx.author} exceeded the limit using command {ctx.invoked_with}!")
     return Unhandled(error)

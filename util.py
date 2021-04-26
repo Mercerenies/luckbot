@@ -35,6 +35,6 @@ if TYPE_CHECKING:
     FailedParsingNone = type(None)
 else:
     class FailedParsingNone(commands.Converter):
-        def convert(ctx: commands.Context, argument: str) -> Optional[type(None)]:
+        async def convert(ctx: commands.Context, argument: str) -> Optional[type(None)]:
             raise Exception("Failed conversion")
 OptionalChecked = Union[T, FailedParsingNone]

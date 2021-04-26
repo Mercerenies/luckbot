@@ -37,6 +37,7 @@ def is_admin_check() -> _CheckDecorator:
 
 def is_admin_or_role_owner_check() -> _CheckDecorator:
     def test(ctx: commands.Context) -> bool:
+        print(ctx.args)
         if is_admin(ctx.author):
             return True
         if len(ctx.args) < 3:
