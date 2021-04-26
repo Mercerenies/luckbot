@@ -36,11 +36,15 @@ class Deck:
         return None
 
     def draw_cards(self, n: int) -> Optional[List[str]]:
+        if len(self.data.draw_pile) == len(self.data.discard_pile) == 0:
+            return None # Deck is empty
         if len(self.data.draw_pile) < n and not self.data.autoreplenish:
             return None
         cards = []
         for _i in range(n):
             card = self._draw_one()
+            if card is None:
+                break
             cards.append(card)
             self.data.discard_pile.append(card)
         return cards

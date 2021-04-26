@@ -7,6 +7,7 @@ T = TypeVar('T', bound='WithData[object]')
 S_co = TypeVar('S_co', covariant=True)
 K = TypeVar('K')
 
+# ///// dict_delegator doesn't do as much type checking as it should; we need some fancy bounded quantifiers :)
 class WithData(Generic[S_co]):
     data: Dict[str, S_co]
 
