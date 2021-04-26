@@ -9,3 +9,9 @@ class PermissionsException(Exception):
 
 class InputsTooLarge(Exception):
     pass
+
+class DeckNotFound(commands.BadArgument):
+    argument: str
+
+    def __init__(self, argument: str) -> None:
+        self.argument = argument

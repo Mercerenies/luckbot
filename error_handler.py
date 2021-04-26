@@ -1,5 +1,5 @@
 
-from error import PermissionsException, InputsTooLarge, UnmanagedRole
+from error import PermissionsException, InputsTooLarge, UnmanagedRole, DeckNotFound
 
 import discord.ext.commands as commands
 import discord
@@ -97,4 +97,6 @@ def appropriate_response(ctx: commands.Context, error: Exception) -> Response:
         return Handled("I'm not managing that role. You'll need to have an admin use `!role manage` if you want me to manage it.")
     elif isinstance(error, InputsTooLarge):
         return Handled("Stahp!").with_debug_output(f"{ctx.author} exceeded the limit using command {ctx.invoked_with}!")
+    elif isinstance(error, DeckNotFound):
+        return Handled("I don't know of any deck called '{error.argument}'.")
     return Unhandled(error)

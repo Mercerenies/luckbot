@@ -1,6 +1,7 @@
 
 import error
 from storage import json_data
+from deck import Deck
 
 import discord
 from discord.ext import commands
@@ -27,6 +28,9 @@ def is_owner_of_role(member: Union[discord.Member, discord.User], role: discord.
     data = json_data.roles[role.id]
     return member.id in data.owners
 
+def is_owner_of_deck(member: Union[discord.Member, discord.User], deck: Deck) -> bool:
+    return member.id in deck.data.owners
+
 def is_admin(member: discord.abc.User) -> bool:
     if not isinstance(member, discord.Member):
         return False
@@ -37,12 +41,22 @@ def is_admin_check() -> _CheckDecorator:
 
 def is_admin_or_role_owner_check() -> _CheckDecorator:
     def test(ctx: commands.Context) -> bool:
-        print(ctx.args)
         if is_admin(ctx.author):
             return True
         if len(ctx.args) < 3:
             return True # Invalid command and not enough info to check against role
         if is_owner_of_role(ctx.author, ctx.args[2]):
+            return True
+        return False
+    return commands.check(test)
+
+def is_admin_or_deck_owner_check() -> _CheckDecorator:
+    def test(ctx: commands.Context) -> bool:
+        if is_admin(ctx.author):
+            return True
+        if len(ctx.args) < 3:
+            return True # Invalid command and not enough info to check against role
+        if is_owner_of_deck(ctx.author, ctx.args[2]):
             return True
         return False
     return commands.check(test)
