@@ -1,10 +1,13 @@
 
+import deck
+
 from typing import Dict, Any, Union, Callable, TypeVar, Generic, Optional, List
 
 # Manager for the JSON storage data
 
 T = TypeVar('T', bound='WithData[object]')
 S_co = TypeVar('S_co', covariant=True)
+K = TypeVar('K')
 
 class WithData(Generic[S_co]):
     data: Dict[str, S_co]
@@ -54,27 +57,29 @@ class JSONData(WithData[Any]):
         return ""
 
     @property
-    def roles(self) -> 'RoleJSONCollection':
+    def roles(self) -> 'JSONCollection[int, RoleData]':
         if 'roles' not in self.data:
             self.data['roles'] = {}
-        return RoleJSONCollection(self.data['roles'])
+        return JSONCollection(self.data['roles'], RoleData)
 
-class RoleJSONCollection(WithData[Any]):
+class JSONCollection(Generic[K, T], WithData[Any]):
     data: Dict[str, Any]
+    ctor: Callable[[Any], T]
 
-    def __init__(self, data: Dict[str, Any]) -> None:
+    def __init__(self, data: Dict[str, Any], ctor: Callable[[Any], T]) -> None:
         self.data = data
+        self.ctor = ctor # type: ignore
 
-    def __contains__(self, id: int) -> bool:
+    def __contains__(self, id: K) -> bool:
         return str(id) in self.data
 
-    def __getitem__(self, id: int) -> 'RoleData':
-        return RoleData(self.data[str(id)])
+    def __getitem__(self, id: K) -> T:
+        return self.ctor(self.data[str(id)]) # type: ignore
 
-    def __setitem__(self, id: int, v: 'RoleData') -> None:
+    def __setitem__(self, id: K, v: T) -> None:
         self.data[str(id)] = v.data
 
-    def __delitem__(self, id: int) -> None:
+    def __delitem__(self, id: K) -> None:
         del self.data[str(id)]
 
 class RoleData(WithData[Any]):
