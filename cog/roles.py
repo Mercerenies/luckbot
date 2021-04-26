@@ -20,7 +20,7 @@ else:
         def __init__(self):
             self._inner = commands.RoleConverter()
 
-        async def convert(ctx: commands.Context, argument: str) -> discord.Role:
+        async def convert(self, ctx: commands.Context, argument: str) -> discord.Role:
             role = await self._inner.convert(ctx, argument)
             if role.id not in json_data.roles:
                 raise error.UnmanagedRole()
