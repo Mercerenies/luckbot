@@ -3,7 +3,7 @@ from storage import json_data, DeckData, DEFAULT_MAX_DECK
 from permission import is_admin_check, is_admin_or_deck_owner, is_admin_or_deck_owner_check
 from util import find_member, Context, expand_roles
 import error
-from deck import Deck
+from deck import Deck, DeckTemplate
 
 import discord
 from discord.ext import commands
@@ -138,9 +138,39 @@ class DeckManagement(commands.Cog, name="Deck Management"):
         else:
             await ctx.send("Only deck owners can deal from this deck now.")
 
+    @deck.group(invoke_without_command=True)
+    async def template(self, ctx: Context) -> None:
+        """Commands to load predefined deck templates."""
+        await ctx.send_help(ctx.command)
+
+    @template.command(name='load')
+    @is_admin_or_deck_owner_check()
+    async def template_load(self, ctx: Context, deck: Deck, template: DeckTemplate) -> None:
+        """Load a template into a deck.
+
+        Adds all of the cards from the given template into the deck's
+        draw pile. There must be enough room in the deck to use this command.
+
+        Admins and deck owners only.
+
+        """
+        if deck.total_cards() + len(template.cards) > deck.data.max_deck_size:
+            await ctx.send(f"The limit on this deck is {deck.data.max_deck_size}. If you need more cards, you can ask an admin to increase the limit.")
+            return
+        for card in template.cards:
+            deck.place_atop_deck(card)
+        await ctx.send("Okay, I added those cards.")
+
+    @template.command(name='list')
+    async def template_list(self, ctx: Context) -> None:
+        """List all available deck templates."""
+        templates = zz.of(DeckTemplate.all()).map(lambda t: f"{t.name} ({len(t.cards)})").list()
+        await ctx.send("The following deck templates are available:\n```\n" + '\n'.join(templates) + "\n```")
+
     @deck.command()
     @is_admin_or_deck_owner_check()
     async def add(self, ctx: Context, deck: Deck, *cards: str) -> None:
+
         """Add one or more cards to a deck.
 
         This adds several cards to the top of the deck in order, so
@@ -220,6 +250,21 @@ class DeckManagement(commands.Cog, name="Deck Management"):
         await ctx.send(f"Removed a total of {matches} card(s).")
 
     @deck.command()
+    @is_admin_or_deck_owner_check()
+    async def clear(self, ctx: Context, deck: Deck) -> None:
+        """Removes all cards from the deck.
+
+        The discard pile and draw pile are both completely emptied.
+
+        Admins and deck owners only.
+
+        """
+        matches = len(deck.data.draw_pile) + len(deck.data.discard_pile)
+        deck.data.draw_pile = []
+        deck.data.discard_pile = []
+        await ctx.send(f"Removed a total of {matches} card(s).")
+
+    @deck.command()
     async def draw(self, ctx: Context, deck: Deck, count: int = 1) -> None:
         """Draws several cards from the deck.
 
@@ -234,6 +279,7 @@ class DeckManagement(commands.Cog, name="Deck Management"):
 
     @deck.command()
     async def deal(self, ctx: Context, deck: Deck, count: Optional[int] = None, *targets: discord.Member):
+        """Deal cards to players."""
         if not deck.data.freedeal:
             # Need to be admin or deck owner
             if not is_admin_or_deck_owner(ctx):

@@ -1,13 +1,17 @@
 
 from storage import json_data, DeckData
-from error import DeckNotFound
+from error import DeckNotFound, DeckTemplateNotFound
 
 import random
 from discord.ext import commands
+import json
 
-from typing import Iterator, Optional, List, TypeVar, Type
+from typing import Iterator, Optional, List, TypeVar, Type, Dict
 
 _T = TypeVar('_T', bound='Deck')
+_S = TypeVar('_S', bound='DeckTemplate')
+
+_TEMPLATES: Dict[str, List[str]] = {}
 
 # This wrapper class provides conventional "deck of cards"
 # functionality such as shuffling and drawing cards. If you're looking
@@ -87,3 +91,34 @@ class Deck:
             if decks[id].name == argument:
                 return cls(decks[id])
         raise DeckNotFound(argument)
+
+class DeckTemplate:
+    name: str
+    cards: List[str]
+
+    def __init__(self, name: str, cards: List[str]) -> None:
+        self.name = name
+        self.cards = cards
+
+    @classmethod
+    async def convert(cls: Type[_S], ctx: commands.Context, argument: str) -> _S:
+        if argument.lower() in _TEMPLATES:
+            return cls(argument.lower(), _TEMPLATES[argument.lower()])
+        raise DeckTemplateNotFound(argument)
+
+    @staticmethod
+    def all() -> Iterator['DeckTemplate']:
+        for k, v in _TEMPLATES.items():
+            yield DeckTemplate(k, v)
+
+with open('deck_templates.json') as f:
+    _TEMPLATES = json.load(f)
+    # Validate the information we just loaded
+    for k in _TEMPLATES:
+        if not isinstance(_TEMPLATES[k], list):
+            print("Invalid format in deck_templates.json at", k)
+            exit(1)
+        for x in _TEMPLATES[k]:
+            if not isinstance(x, str):
+                print("Invalid format in deck_templates.json at", k)
+                exit(1)
