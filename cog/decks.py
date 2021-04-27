@@ -283,7 +283,7 @@ class DeckManagement(commands.Cog, name="Deck Management"):
         await ctx.send(f"Removed a total of {matches} card(s).")
 
     @deck.command()
-    async def draw(self, ctx: Context, deck: Deck, face: Optional[Face], count: int = 1) -> None:
+    async def draw(self, ctx: Context, deck: Deck, face: Optional[Face] = 'faceup', count: Optional[int] = 1) -> None:
         """Draws several cards from the deck.
 
         If a count is not provided, it defaults to 1.
@@ -296,6 +296,8 @@ class DeckManagement(commands.Cog, name="Deck Management"):
         """
         if face is None:
             face = 'faceup'
+        if count is None:
+            count = 1
         if count > MAX_DRAW:
             raise error.InputsTooLarge()
         cards = deck.draw_cards(count)
@@ -308,13 +310,26 @@ class DeckManagement(commands.Cog, name="Deck Management"):
             await ctx.author.send(f"You drew: {', '.join(cards)}")
 
     @deck.command()
-    async def deal(self, ctx: Context, deck: Deck, count: Optional[int] = None, *targets: discord.Member):
-        """Deal cards to players."""
+    async def deal(self, ctx: Context, deck: Deck, face: Optional[Face] = 'facedown', count: Optional[int] = 1, *targets: discord.Member):
+        """Deal cards to players.
+
+        By default, cards are dealt face-down, which means that the
+        players are DMed about their cards. If you wish for cards to
+        be dealt face-up, use '!deal <deck> faceup [count]
+        <members>...'. The players will still be DMed, but Luckbot
+        will also announce the cards dealt in the channel where the
+        command was issued. This is especially useful if the "deal"
+        command is issued via DM, as the member issuing the command
+        will be made aware of all cards dealt in this manner.
+
+        """
         if not deck.data.freedeal:
             # Need to be admin or deck owner
             if not is_admin_or_deck_owner(ctx):
                 raise commands.CheckFailure()
 
+        if face is None:
+            face = 'facedown'
         if count is None:
             count = 1
         if count > MAX_DRAW:
@@ -326,6 +341,10 @@ class DeckManagement(commands.Cog, name="Deck Management"):
                 await ctx.send(f"There aren't enough cards in the deck to deal to {target}")
             else:
                 await target.send(f"{ctx.author} dealt you the following cards: {', '.join(cards)}")
+                if face == 'faceup':
+                    await ctx.send(f"{target} was dealt the following cards: {', '.join(cards)}")
+                else:
+                    await ctx.send(f"{target} was dealt card(s).")
 
     @deck.command()
     async def peek(self, ctx: Context, deck: Deck, *positions: int) -> None:
