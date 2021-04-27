@@ -3,33 +3,32 @@ from typing import Dict, Any, Union, Callable, TypeVar, Generic, Optional, List,
 
 # Manager for the JSON storage data
 
-T = TypeVar('T', bound='WithData[object]')
-S_co = TypeVar('S_co', covariant=True)
+T = TypeVar('T', bound='WithData[Any]')
+S = TypeVar('S')
 K = TypeVar('K')
 
-# ///// dict_delegator doesn't do as much type checking as it should; we need some fancy bounded quantifiers :)
-class WithData(Generic[S_co]):
-    data: Dict[str, S_co]
+class WithData(Generic[S]):
+    data: Dict[str, S]
 
-class dict_delegator(Generic[T, S_co]):
-    func: Callable[[T], S_co]
+class dict_delegator(Generic[T, S]):
+    func: Callable[[T], S]
 
-    def __init__(self, func: Callable[[T], S_co]) -> None:
+    def __init__(self, func: Callable[[T], S]) -> None:
         self.func = func # type: ignore
 
     @property
     def name(self):
         return self.func.__name__
 
-    def __get__(self, instance: T, _owner):
+    def __get__(self, instance: T, _owner) -> S:
         if self.name not in instance.data:
             instance.data[self.name] = self.func(instance) # type: ignore
         return instance.data[self.name]
 
-    def __set__(self, instance, value):
+    def __set__(self, instance: T, value: S):
         instance.data[self.name] = value
 
-    def __delete__(self, instance):
+    def __delete__(self, instance: T):
         if self.name in instance.data:
             del instance.data[self.name]
 
@@ -48,7 +47,7 @@ class JSONData(WithData[Any]):
         return 0
 
     @dict_delegator
-    def linky(self) -> Optional[str]:
+    def linky(self) -> Optional[int]:
         return None
 
     @dict_delegator

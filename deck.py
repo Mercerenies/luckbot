@@ -23,7 +23,7 @@ class Deck:
         random.shuffle(self.data.draw_pile)
 
     def replace_discard_pile(self) -> None:
-        self.data.draw_pile += reversed(self.data.discard_pile)
+        self.data.draw_pile += list(reversed(self.data.discard_pile))
         self.data.discard_pile = []
 
     def _draw_one(self) -> Optional[str]:
