@@ -7,6 +7,8 @@ T = TypeVar('T', bound='WithData[Any]')
 S = TypeVar('S')
 K = TypeVar('K')
 
+DEFAULT_MAX_DECK = 40
+
 class WithData(Generic[S]):
     data: Dict[str, S]
 
@@ -140,6 +142,10 @@ class DeckData(WithData[Any]):
     @dict_delegator
     def autoreplenish(self) -> bool:
         return False
+
+    @dict_delegator
+    def max_deck_size(self) -> int:
+        return DEFAULT_MAX_DECK
 
 # TODO It's just a flat global right now. We should store this in the
 # main file and pass it only to functions that need it.

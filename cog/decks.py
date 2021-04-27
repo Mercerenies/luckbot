@@ -1,5 +1,5 @@
 
-from storage import json_data, DeckData
+from storage import json_data, DeckData, DEFAULT_MAX_DECK
 from permission import is_admin_check, is_admin_or_deck_owner_check
 from util import find_member, Context
 import error
@@ -13,8 +13,7 @@ from alakazam import _1, _2, _3, _4, _5
 from typing import Union, List, TYPE_CHECKING
 
 MAX_DRAW = 100
-
-# ///// Maximum deck size (configurable by an admin)
+MAX_CARD_LEN = 64
 
 def owner_list(server: discord.Guild, deck: Deck) -> List[discord.Member]:
     return zz.of(deck.data.owners).map(server.get_member).filter(_1).list()
@@ -38,7 +37,7 @@ class DeckManagement(commands.Cog, name="Deck Management"):
         if name in json_data.decks:
             await ctx.send("There's already a deck with that name.")
         json_data.decks[name] = DeckData(name)
-        await ctx.send(f"Alright, I made a deck called '{name}'.")
+        await ctx.send(f"Alright, I made a deck called '{name}' with maximum size {DEFAULT_MAX_DECK}.")
 
     @deck.command()
     @is_admin_check()
@@ -49,6 +48,24 @@ class DeckManagement(commands.Cog, name="Deck Management"):
         name = deck.data.name
         del json_data.decks[name]
         await ctx.send(f"The deck '{name}' has been deleted.")
+
+    @deck.command()
+    @is_admin_check()
+    async def list(self, ctx: Context) -> None:
+        """List all decks currently managed by Luckbot.
+
+        Admin only."""
+        decks = list(json_data.decks)
+        await ctx.send(f"I'm currently managing the following decks: {', '.join(decks)}")
+
+    @deck.command()
+    @is_admin_check()
+    async def setlimit(self, ctx: Context, deck: Deck, limit: int) -> None:
+        """Set the maximum number of cards allowed in the deck.
+
+        Admin only."""
+        deck.data.max_deck_size = limit
+        await ctx.send(f"Okay, the deck '{deck.data.name}' has limit {limit} now.")
 
     @deck.command()
     @is_admin_or_deck_owner_check()
@@ -117,6 +134,11 @@ class DeckManagement(commands.Cog, name="Deck Management"):
         Admins and deck owners only.
 
         """
+        if zz.of(cards).any(lambda x: len(x) > MAX_CARD_LEN):
+            raise error.InputsTooLarge()
+        if deck.total_cards() + len(cards) > deck.data.max_deck_size:
+            await ctx.send(f"The limit on this deck is {deck.data.max_deck_size}. If you need more cards, you can ask an admin to increase the limit.")
+            return
         for card in cards:
             deck.place_atop_deck(card)
         if len(cards) == 0:
@@ -134,6 +156,11 @@ class DeckManagement(commands.Cog, name="Deck Management"):
         Admins and deck owners only.
 
         """
+        if len(card) > MAX_CARD_LEN:
+            raise error.InputsTooLarge()
+        if deck.total_cards() + count > deck.data.max_deck_size:
+            await ctx.send(f"The limit on this deck is {deck.data.max_deck_size}. If you need more cards, you can ask an admin to increase the limit.")
+            return
         for _i in range(count):
             deck.place_atop_deck(card)
         await ctx.send("Okay, I added those cards.")

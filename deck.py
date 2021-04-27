@@ -19,6 +19,9 @@ class Deck:
     def __init__(self, data: DeckData) -> None:
         self.data = data
 
+    def total_cards(self) -> int:
+        return len(self.data.draw_pile) + len(self.data.discard_pile)
+
     def shuffle(self) -> None:
         random.shuffle(self.data.draw_pile)
 
