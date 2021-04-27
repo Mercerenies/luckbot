@@ -298,6 +298,19 @@ class DeckManagement(commands.Cog, name="Deck Management"):
                 await target.send(f"{ctx.author} dealt you the following cards: {', '.join(cards)}")
 
     @deck.command()
+    async def peek(self, ctx: Context, deck: Deck, *positions: int) -> None:
+        """Peek at a card at a given position in the draw pile."""
+        draw_pile = deck.data.draw_pile
+        peeks: List[str] = []
+        for position in positions:
+            if 1 <= position <= len(draw_pile):
+                peeks.append(draw_pile[- position])
+            else:
+                await ctx.send(f"There are {len(draw_pile)} cards in the deck. You can't peek the card at position {position}")
+                return
+        await ctx.send(f"{ctx.author} peeked and saw: {', '.join(peeks)}")
+
+    @deck.command()
     async def count(self, ctx: Context, deck: Deck) -> None:
         """Show the number of cards in the draw pile and the discard pile."""
         name = deck.data.name
