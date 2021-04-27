@@ -1,7 +1,7 @@
 
 from storage import json_data, DeckData, DEFAULT_MAX_DECK
-from permission import is_admin_check, is_admin_or_deck_owner_check
-from util import find_member, Context
+from permission import is_admin_check, is_admin_or_deck_owner, is_admin_or_deck_owner_check
+from util import find_member, Context, expand_roles
 import error
 from deck import Deck
 
@@ -10,7 +10,7 @@ from discord.ext import commands
 import alakazam as zz
 from alakazam import _1, _2, _3, _4, _5
 
-from typing import Union, List, TYPE_CHECKING
+from typing import Union, List, TYPE_CHECKING, Optional
 
 MAX_DRAW = 100
 MAX_CARD_LEN = 64
@@ -123,6 +123,23 @@ class DeckManagement(commands.Cog, name="Deck Management"):
 
     @deck.command()
     @is_admin_or_deck_owner_check()
+    async def freedeal(self, ctx: Context, deck: Deck, b: bool) -> None:
+        """Sets whether or not any player is allowed to deal from the deck.
+
+        The default behavior (false) only allows the owner to deal
+        from the deck.
+
+        Admins and deck owners only.
+
+        """
+        deck.data.freedeal = b
+        if b:
+            await ctx.send("Anyone can deal cards from this deck now.")
+        else:
+            await ctx.send("Only deck owners can deal from this deck now.")
+
+    @deck.command()
+    @is_admin_or_deck_owner_check()
     async def add(self, ctx: Context, deck: Deck, *cards: str) -> None:
         """Add one or more cards to a deck.
 
@@ -214,6 +231,25 @@ class DeckManagement(commands.Cog, name="Deck Management"):
             await ctx.send("There aren't enough cards in the deck to draw.")
         else:
             await ctx.send(f"{ctx.author} drew: {', '.join(cards)}")
+
+    @deck.command()
+    async def deal(self, ctx: Context, deck: Deck, count: Optional[int] = None, *targets: discord.Member):
+        if not deck.data.freedeal:
+            # Need to be admin or deck owner
+            if not is_admin_or_deck_owner(ctx):
+                raise commands.CheckFailure()
+
+        if count is None:
+            count = 1
+        if count > MAX_DRAW:
+            raise error.InputsTooLarge()
+
+        for target in targets:
+            cards = deck.draw_cards(count)
+            if cards is None:
+                await ctx.send(f"There aren't enough cards in the deck to deal to {target}")
+            else:
+                await target.send(f"{ctx.author} dealt you the following cards: {', '.join(cards)}")
 
     @deck.command()
     async def count(self, ctx: Context, deck: Deck) -> None:

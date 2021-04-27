@@ -39,24 +39,26 @@ def is_admin(member: discord.abc.User) -> bool:
 def is_admin_check() -> _CheckDecorator:
     return commands.has_guild_permissions(administrator=True)
 
+def is_admin_or_role_owner(ctx: commands.Context) -> bool:
+    if is_admin(ctx.author):
+        return True
+    if len(ctx.args) < 3:
+        return True # Invalid command and not enough info to check against role
+    if is_owner_of_role(ctx.author, ctx.args[2]):
+        return True
+    return False
+
 def is_admin_or_role_owner_check() -> _CheckDecorator:
-    def test(ctx: commands.Context) -> bool:
-        if is_admin(ctx.author):
-            return True
-        if len(ctx.args) < 3:
-            return True # Invalid command and not enough info to check against role
-        if is_owner_of_role(ctx.author, ctx.args[2]):
-            return True
-        return False
-    return commands.check(test)
+    return commands.check(is_admin_or_role_owner)
+
+def is_admin_or_deck_owner(ctx: commands.Context) -> bool:
+    if is_admin(ctx.author):
+        return True
+    if len(ctx.args) < 3:
+        return True # Invalid command and not enough info to check against role
+    if is_owner_of_deck(ctx.author, ctx.args[2]):
+        return True
+    return False
 
 def is_admin_or_deck_owner_check() -> _CheckDecorator:
-    def test(ctx: commands.Context) -> bool:
-        if is_admin(ctx.author):
-            return True
-        if len(ctx.args) < 3:
-            return True # Invalid command and not enough info to check against role
-        if is_owner_of_deck(ctx.author, ctx.args[2]):
-            return True
-        return False
-    return commands.check(test)
+    return commands.check(is_admin_or_deck_owner)

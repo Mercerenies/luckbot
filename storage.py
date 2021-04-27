@@ -144,6 +144,10 @@ class DeckData(WithData[Any]):
         return False
 
     @dict_delegator
+    def freedeal(self) -> bool:
+        return False
+
+    @dict_delegator
     def max_deck_size(self) -> int:
         return DEFAULT_MAX_DECK
 
