@@ -1,5 +1,5 @@
 
-from error import PermissionsException, InputsTooLarge, UnmanagedRole, DeckNotFound, DeckTemplateNotFound
+from error import PermissionsException, InputsTooLarge, UnmanagedRole, DeckNotFound, DeckTemplateNotFound, BadFaceArgument
 
 import discord.ext.commands as commands
 import discord
@@ -101,4 +101,6 @@ def appropriate_response(ctx: commands.Context, error: Exception) -> Response:
         return Handled(f"I don't know of any deck called '{error.argument}'.")
     elif isinstance(error, DeckTemplateNotFound):
         return Handled(f"I don't know of any deck template called '{error.argument}'.")
+    elif isinstance(error, BadFaceArgument):
+        return Handled(f"I was expecting faceup or facedown, but got '{error.argument}'.")
     return Unhandled(error)

@@ -9,8 +9,26 @@ import discord
 from discord.ext import commands
 import alakazam as zz
 from alakazam import _1, _2, _3, _4, _5
+import sys
 
-from typing import Union, List, TYPE_CHECKING, Optional
+from typing import Union, List, TYPE_CHECKING, Optional, cast
+
+if sys.version_info >= (3, 8):
+    from typing import Literal
+else:
+    from typing_extensions import Literal
+
+class _FaceConverter:
+    @classmethod
+    async def convert(_cls, ctx: Context, argument: str) -> Literal["faceup", "facedown"]:
+        if argument in ["faceup", "facedown"]:
+            return cast(Literal["faceup", "facedown"], argument)
+        raise error.BadFaceArgument(argument)
+
+if TYPE_CHECKING:
+    Face = Literal["faceup", "facedown"]
+else:
+    Face = _FaceConverter
 
 MAX_DRAW = 100
 MAX_CARD_LEN = 64
@@ -265,17 +283,29 @@ class DeckManagement(commands.Cog, name="Deck Management"):
         await ctx.send(f"Removed a total of {matches} card(s).")
 
     @deck.command()
-    async def draw(self, ctx: Context, deck: Deck, count: int = 1) -> None:
+    async def draw(self, ctx: Context, deck: Deck, face: Optional[Face], count: int = 1) -> None:
         """Draws several cards from the deck.
 
-        If a count is not provided, it defaults to 1."""
+        If a count is not provided, it defaults to 1.
+
+        By default, cards are drawn face-up, which means the results
+        are posted in the same chat the command was executed. If you
+        wish to draw face-down, use '!deck draw <deck> facedown
+        [count]' and you'll be DMed the results.
+
+        """
+        if face is None:
+            face = 'faceup'
         if count > MAX_DRAW:
             raise error.InputsTooLarge()
         cards = deck.draw_cards(count)
         if cards is None:
             await ctx.send("There aren't enough cards in the deck to draw.")
-        else:
+        elif face == 'faceup':
             await ctx.send(f"{ctx.author} drew: {', '.join(cards)}")
+        else:
+            await ctx.send(f"{ctx.author} drew card(s).")
+            await ctx.author.send(f"You drew: {', '.join(cards)}")
 
     @deck.command()
     async def deal(self, ctx: Context, deck: Deck, count: Optional[int] = None, *targets: discord.Member):
