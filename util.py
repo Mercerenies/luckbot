@@ -4,7 +4,7 @@ from alakazam import _1, _2, _3
 import discord
 from discord.ext import commands
 
-from typing import Optional, TYPE_CHECKING, Union, TypeVar
+from typing import Optional, TYPE_CHECKING, Union, TypeVar, Iterator, Iterable
 
 T = TypeVar('T')
 
@@ -18,6 +18,19 @@ async def log_message(bot: commands.Bot, text: str) -> None:
     channel = zz.of(bot.get_all_channels()).find(_1.name == "bot-logs")
     if channel:
         await channel.send(text)
+
+def expand_roles(seq: Iterable[Union[discord.Member, discord.Role]]) -> Iterator[discord.Member]:
+    """Given a sequence of members and roles, produce a sequence of
+    members. All members in the original sequence are left alone, and
+    all roles are expanded to be the list of members having that
+    role.
+
+    """
+    for x in seq:
+        if isinstance(x, discord.Member):
+            yield x
+        else:
+            yield from x.members
 
 Context = discord.ext.commands.Context
 
