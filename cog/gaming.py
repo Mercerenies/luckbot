@@ -1,7 +1,7 @@
 
 from util import Context, expand_roles
 from grid import GridConfig, WordList, DefaultWordList, CustomWordList, CodenameManager
-from error import InputsTooLarge
+from error import InputsTooLarge, TooManyMembers
 from spyfall import Location as SpyfallLocation
 
 import discord
@@ -81,7 +81,11 @@ class GamingUtilities(commands.Cog, name="Gaming Utilities"):
         """
         members = list(expand_roles(targets))
         location = SpyfallLocation.random()
-        game_roles = location.choose_roles(members)
+        try:
+            game_roles = location.choose_roles(members)
+        except TooManyMembers:
+            await ctx.send(f"Sorry, I can only support {len(location.roles) + 1} players in Spyfall.")
+            return
         for member, role in game_roles:
             await member.send(embed=location.role_card(role=role, member_name=member.name))
         await ctx.send("I've dealt out everybody's Spyfall roles. Good luck!")
