@@ -1,7 +1,8 @@
 
-from util import Context
+from util import Context, expand_roles
 from grid import GridConfig, WordList, DefaultWordList, CustomWordList, CodenameManager
 from error import InputsTooLarge
+from spyfall import Location as SpyfallLocation
 
 import discord
 from discord.ext import commands
@@ -9,7 +10,7 @@ from discord.ext import commands
 from io import BytesIO
 import re
 
-from typing import Optional
+from typing import Optional, Union
 
 MAX_GRID_SIZE = 50
 
@@ -66,3 +67,21 @@ class GamingUtilities(commands.Cog, name="Gaming Utilities"):
         cfg1 = GridConfig(rows=5, cols=5, cells=manager.hidden())
         await send_image_of_grid(ctx, cfg )
         await send_image_of_grid(ctx, cfg1)
+
+    @commands.command()
+    async def spyfall(self, ctx: Context, *targets: Union[discord.Member, discord.Role]) -> None:
+        """Deals out roles for a game of Spyfall.
+
+        !spyfall <targets...>
+
+        The targets can be either members or a role. If a role is
+        provided, all members who have that role will be considered
+        players.
+
+        """
+        members = list(expand_roles(targets))
+        location = SpyfallLocation.random()
+        game_roles = location.choose_roles(members)
+        for member, role in game_roles:
+            await member.send(embed=location.role_card(role=role, member_name=member.name))
+        await ctx.send("I've dealt out everybody's Spyfall roles. Good luck!")

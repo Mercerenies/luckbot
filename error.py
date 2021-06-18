@@ -10,6 +10,9 @@ class PermissionsException(Exception):
 class InputsTooLarge(Exception):
     pass
 
+class TooManyMembers(Exception):
+    pass
+
 class BadFaceArgument(commands.BadArgument):
     argument: str
 
