@@ -35,6 +35,7 @@ class Location:
             raise error.TooManyMembers(f"Too many members to play Spyfall")
         roles = self.roles[:]
         random.shuffle(roles)
+        random.shuffle(members)
         roles = [SPY_ROLE] + roles
         return list(zip(members, roles))
 
