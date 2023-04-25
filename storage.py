@@ -22,15 +22,15 @@ class dict_delegator(Generic[T, S]):
     def name(self):
         return self.func.__name__
 
-    def __get__(self, instance: T, _owner) -> S:
+    def __get__(self, instance: T, _owner: Any) -> S:
         if self.name not in instance.data:
             instance.data[self.name] = self.func(instance) # type: ignore
         return instance.data[self.name]
 
-    def __set__(self, instance: T, value: S):
+    def __set__(self, instance: T, value: S) -> None:
         instance.data[self.name] = value
 
-    def __delete__(self, instance: T):
+    def __delete__(self, instance: T) -> None:
         if self.name in instance.data:
             del instance.data[self.name]
 
