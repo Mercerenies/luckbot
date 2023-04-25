@@ -106,6 +106,17 @@ class CodenameManager(CellManager):
     def hidden(self) -> HiddenColorsManager:
         return HiddenColorsManager(self)
 
+class FirstContactManager(CodenameManager):
+
+    def __init__(self, rows: int, cols: int, words: Optional[WordList] = None):
+        super().__init__(
+            rows=rows,
+            cols=cols,
+            defcolor='white',
+            colors=(('red', 4), ('blue', 5), ('green', 6)),
+            words=words,
+        )
+
 class BasicCellManager(CellManager):
     _bg: str
     _fg: str

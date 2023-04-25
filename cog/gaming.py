@@ -1,6 +1,6 @@
 
 from util import Context, expand_roles
-from grid import GridConfig, WordList, DefaultWordList, CustomWordList, CodenameManager
+from grid import GridConfig, WordList, DefaultWordList, CustomWordList, CodenameManager, FirstContactManager
 from error import InputsTooLarge, TooManyMembers
 from spyfall import Location as SpyfallLocation
 
@@ -63,6 +63,34 @@ class GamingUtilities(commands.Cog, name="Gaming Utilities"):
             wordlist = CustomWordList(words1)
 
         manager = CodenameManager(rows=5, cols=5, words=wordlist)
+        cfg  = GridConfig(rows=5, cols=5, cells=manager)
+        cfg1 = GridConfig(rows=5, cols=5, cells=manager.hidden())
+        await send_image_of_grid(ctx, cfg )
+        await send_image_of_grid(ctx, cfg1)
+
+    @commands.command()
+    async def firstcontact(self, ctx: Context, words: Optional[str] = None) -> None:
+        """Generates a First Contact board.
+
+        !firstcontact <words>
+
+        If provided, the word list should be a semicolon-separated list of
+        words to include. The list must contain at least 25 elements but
+        can contain more.
+
+        """
+
+        wordlist: WordList
+        if words is None:
+            wordlist = DefaultWordList()
+        else:
+            words1 = words.split(';')
+            if len(words1) < 25:
+                await ctx.send("Not enough words.")
+                return
+            wordlist = CustomWordList(words1)
+
+        manager = FirstContactManager(rows=5, cols=5, words=wordlist)
         cfg  = GridConfig(rows=5, cols=5, cells=manager)
         cfg1 = GridConfig(rows=5, cols=5, cells=manager.hidden())
         await send_image_of_grid(ctx, cfg )
