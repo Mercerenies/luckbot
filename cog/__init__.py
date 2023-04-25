@@ -13,6 +13,6 @@ from typing import List, Callable
 COGS: List[Callable[[commands.Bot], commands.Cog]]
 COGS = [RoleManagement, LuckCommands, Administrative, DiscordFun, GamingUtilities, DeckManagement]
 
-def add_cogs(bot: commands.Bot) -> None:
+async def add_cogs(bot: commands.Bot) -> None:
     for cog in COGS:
-        bot.add_cog(cog(bot))
+        await bot.add_cog(cog(bot))

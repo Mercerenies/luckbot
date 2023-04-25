@@ -26,8 +26,8 @@ Games server. You can read more about me at https://github.com/Mercerenies/luckb
 
 intents = discord.Intents.default()
 intents.members = True
+intents.message_content = True
 bot = commands.Bot(command_prefix='!', description=description, intents=intents)
-cog.add_cogs(bot)
 
 @bot.event
 async def on_message(message: discord.Message) -> None:
@@ -42,6 +42,7 @@ async def on_command_error(ctx: Context, error: discord.ext.commands.CommandErro
 
 @bot.event
 async def on_ready() -> None:
+    await cog.add_cogs(bot)
     print('Logged in as')
     print(bot.user.name)
     print(bot.user.id)

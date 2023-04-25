@@ -98,7 +98,7 @@ class CodenameManager(CellManager):
         return self.contents[i][j]
 
     def foreground(self, i: int, j: int) -> str:
-        return 'white' if self.contents[i][j] == 'black' else 'black'
+        return 'white' if self.contents[i][j] in ('black', 'blue') else 'black'
 
     def text(self, i: int, j: int) -> str:
         return self.texts[i][j]
