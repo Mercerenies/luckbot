@@ -8,6 +8,7 @@ from discord.ext import commands
 import alakazam as zz
 from alakazam import _1
 import random
+import os.path
 
 
 class LuckCommands(commands.Cog, name="Luck-Based Commands"):
@@ -28,7 +29,11 @@ class LuckCommands(commands.Cog, name="Luck-Based Commands"):
                 print(("{} made invalid command {}").format(target_name, die))
             else:
                 final, data = res
-                await ctx.send("{} got {} (individual results: {})".format(target_name, final, data))
+                await ctx.send("{} got {} (individual results: {})".format(target_name, final.value, data))
+                if final.image is not None:
+                    with open(final.image, 'rb') as face_image:
+                        f = discord.File(face_image, os.path.basename(final.image))
+                        await ctx.send(file=f)
         except TypeError:
             await ctx.send("I'm afraid that doesn't make sense...")
             traceback.print_exc()

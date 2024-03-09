@@ -1,8 +1,11 @@
 
 from error import InputsTooLarge
+from .result import DieResult
+from .images import image_for
 
 import re
 import random
+from abc import ABC, abstractmethod
 from numbers import Complex
 import alakazam as zz
 
@@ -20,16 +23,17 @@ MAXIMUM = 40
 MAXIMUM_INDIVIDUAL = 99999
 
 
-class AbstractDie(Generic[T_co]):
+class AbstractDie(Generic[T_co], ABC):
 
     def count(self) -> int:
         return 0
 
-    def eval(self, arr: List[T_co]) -> T_co:
+    @abstractmethod
+    def eval(self, arr: List[T_co]) -> DieResult[T_co]:
         raise NotImplementedError()
 
 
-class Die(AbstractDie[int]):
+class RangeDie(AbstractDie[int]):
     n: int
     x: int
     y: int
@@ -42,36 +46,42 @@ class Die(AbstractDie[int]):
     def count(self) -> int:
         return self.n
 
-    def eval(self, arr: List[int]) -> int:
+    def eval(self, arr: List[int]) -> DieResult[int]:
         m = 0
         for i in range(self.n):
             j = random.randint(self.x, self.y)
             m += j
             arr.append(j)
-        return m
+        return DieResult(m, self._identify_image(m))
+
+    def _identify_image(self, result_face: int) -> Optional[str]:
+        if self.x == 1 and self.n == 1:
+            return image_for(self.y, result_face)
+        else:
+            return None
 
     def __repr__(self) -> str:
-        return "Die({!r}, {!r}, {!r})".format(self.n, self.x, self.y)
+        return "RangeDie({!r}, {!r}, {!r})".format(self.n, self.x, self.y)
 
 
-class ChoiceDie(AbstractDie[Union[str, int]]):
+class ChoiceDie(AbstractDie[str | int]):
     n: int
-    choices: Sequence[Union[str, int]]
+    choices: Sequence[str | int]
 
-    def __init__(self, n: int, choices: Sequence[Union[str, int]]) -> None:
+    def __init__(self, n: int, choices: Sequence[str | int]) -> None:
         self.n = n
         self.choices = choices
 
     def count(self) -> int:
         return self.n
 
-    def eval(self, arr: List[Union[int, str]]) -> Union[int, str]:
+    def eval(self, arr: List[int | str]) -> DieResult[int | str]:
         m: Union[int, str] = ''
         for i in range(self.n):
             j = random.choice(self.choices)
             m = add_together(m, j)
             arr.append(j)
-        return m
+        return DieResult(m)
 
     def __repr__(self) -> str:
         return "ChoiceDie({!r}, {!r})".format(self.n, self.choices)
@@ -86,8 +96,9 @@ class Negate(AbstractDie[T_co]):
     def count(self) -> int:
         return self.expr.count()
 
-    def eval(self, arr: List[T_co]) -> T_co:
-        return neg(self.expr.eval(arr))
+    def eval(self, arr: List[T_co]) -> DieResult[T_co]:
+        inner_result = self.expr.eval(arr)
+        return DieResult(neg(inner_result.value))
 
     def __repr__(self):
         return "Negate({!r})".format(self.expr)
@@ -102,8 +113,8 @@ class Lit(AbstractDie[T_co]):
     def count(self) -> int:
         return 0
 
-    def eval(self, arr: List[T_co]) -> T_co:
-        return self.n
+    def eval(self, arr: List[T_co]) -> DieResult[T_co]:
+        return DieResult(self.n)
 
     def __repr__(self) -> str:
         return "Lit({!r})".format(self.n)
@@ -120,8 +131,11 @@ class Oper(AbstractDie[T_co]):
     def count(self) -> int:
         return zz.of(self.data).map(lambda x: x.count()).sum()
 
-    def eval(self, arr: List[T_co]) -> T_co:
-        return zz.of(self.data).map(lambda x: x.eval(arr)).reduce(self.oper)
+    def eval(self, arr: List[T_co]) -> DieResult[T_co]:
+        if len(self.data) == 1:
+            return self.data[0].eval(arr)  # Preserve die images
+        value = zz.of(self.data).map(lambda x: x.eval(arr).value).reduce(self.oper)
+        return DieResult(value)
 
     def __repr__(self) -> str:
         return "Oper({!r}, {!r})".format(self.data, self.oper)
@@ -164,7 +178,7 @@ def _read_number(arg: str) -> Optional[Tuple[Lit[int], str]]:
     return None
 
 
-def _read_die(arg: str) -> Optional[Tuple[Die, str]]:
+def _read_die(arg: str) -> Optional[Tuple[RangeDie, str]]:
     test = _read_number(arg)
     if test:
         n0, arg1 = test
@@ -193,7 +207,7 @@ def _read_die(arg: str) -> Optional[Tuple[Die, str]]:
         return None
     if x > MAXIMUM_INDIVIDUAL or y > MAXIMUM_INDIVIDUAL:
         raise InputsTooLarge()
-    return Die(n=n, x=x, y=y), arg3
+    return RangeDie(n=n, x=x, y=y), arg3
 
 
 def _read_str(arg: str, chars: Callable[[str], Optional[Tuple[str, str]]]) -> Optional[Tuple[str, str]]:
@@ -355,12 +369,13 @@ def parse_dice(string: str) -> Optional[AbstractDie[Union[int, str]]]:
     return res0
 
 
-def dice(string: str) -> Optional[Tuple[Union[int, str], List[Union[int, str]]]]:
+def dice(string: str) -> Optional[Tuple[DieResult[int | str], List[int | str]]]:
     a = parse_dice(string)
     if a:
         if a.count() > MAXIMUM:
             raise TooManyDice()
-        x: List[Union[int, str]] = []
-        return a.eval(x), x
+        accum: List[int | str] = []
+        dice_result = a.eval(accum)
+        return dice_result, accum
     else:
         return None
