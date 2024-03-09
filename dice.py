@@ -5,12 +5,13 @@ import re
 import random
 from numbers import Complex
 import alakazam as zz
-from alakazam import _1, _2, _3, _4, _5
 
 from typing import List, TypeVar, Generic, Sequence, Union, Callable, Optional, Tuple
 
+
 class TooManyDice(InputsTooLarge):
     pass
+
 
 T = TypeVar('T')
 T_co = TypeVar('T_co', covariant=True)

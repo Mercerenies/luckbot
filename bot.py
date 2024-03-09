@@ -61,9 +61,9 @@ try:
             print("Network failure:", type(e), e)
             time.sleep(1)
         finally:
-           if json_data:
-               with open('data.json', 'w') as f:
-                   json.dump(json_data.data, f)
+            if json_data:
+                with open('data.json', 'w') as f:
+                    json.dump(json_data.data, f)
 except Exception as e:
     print("Failure:", type(e), e)
     traceback.print_exc()

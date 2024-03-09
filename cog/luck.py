@@ -2,7 +2,6 @@
 from util import OptionalChecked, Context
 
 import traceback
-from storage import json_data
 import dice
 import discord
 from discord.ext import commands
@@ -10,19 +9,18 @@ import alakazam as zz
 from alakazam import _1
 import random
 
+
 class LuckCommands(commands.Cog, name="Luck-Based Commands"):
 
     def __init__(self, _bot) -> None:
         pass
 
     @commands.command()
-    async def roll(self, ctx: Context, die: str = None, name: OptionalChecked[discord.Member] = None) -> None:
+    async def roll(self, ctx: Context, die: str = "d6", name: OptionalChecked[discord.Member] = None) -> None:
         """Rolls one or more dice"""
 
         target_name: object = name or ctx.message.author
 
-        if die is None:
-            die = "d6"
         try:
             res = dice.dice(die)
             if res is None:
