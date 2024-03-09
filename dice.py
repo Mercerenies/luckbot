@@ -19,6 +19,7 @@ T_co = TypeVar('T_co', covariant=True)
 MAXIMUM = 40
 MAXIMUM_INDIVIDUAL = 99999
 
+
 class AbstractDie(Generic[T_co]):
 
     def count(self) -> int:
@@ -26,6 +27,7 @@ class AbstractDie(Generic[T_co]):
 
     def eval(self, arr: List[T_co]) -> T_co:
         raise NotImplementedError()
+
 
 class Die(AbstractDie[int]):
     n: int
@@ -51,6 +53,7 @@ class Die(AbstractDie[int]):
     def __repr__(self) -> str:
         return "Die({!r}, {!r}, {!r})".format(self.n, self.x, self.y)
 
+
 class ChoiceDie(AbstractDie[Union[str, int]]):
     n: int
     choices: Sequence[Union[str, int]]
@@ -73,6 +76,7 @@ class ChoiceDie(AbstractDie[Union[str, int]]):
     def __repr__(self) -> str:
         return "ChoiceDie({!r}, {!r})".format(self.n, self.choices)
 
+
 class Negate(AbstractDie[T_co]):
     expr: AbstractDie[T_co]
 
@@ -87,6 +91,7 @@ class Negate(AbstractDie[T_co]):
 
     def __repr__(self):
         return "Negate({!r})".format(self.expr)
+
 
 class Lit(AbstractDie[T_co]):
     n: T_co
@@ -103,13 +108,14 @@ class Lit(AbstractDie[T_co]):
     def __repr__(self) -> str:
         return "Lit({!r})".format(self.n)
 
+
 class Oper(AbstractDie[T_co]):
     data: Sequence[AbstractDie[T_co]]
     oper: Callable[[T_co, T_co], T_co]
 
     def __init__(self, data: Sequence[AbstractDie[T_co]], oper: Callable[[T_co, T_co], T_co]) -> None:
         self.data = data
-        self.oper = oper # type: ignore # (https://github.com/python/mypy/issues/5485)
+        self.oper = oper  # type: ignore # (https://github.com/python/mypy/issues/5485)
 
     def count(self) -> int:
         return zz.of(self.data).map(lambda x: x.count()).sum()
@@ -120,11 +126,13 @@ class Oper(AbstractDie[T_co]):
     def __repr__(self) -> str:
         return "Oper({!r}, {!r})".format(self.data, self.oper)
 
+
 def neg(x: T) -> T:
     if isinstance(x, Complex):
         return - x
     else:
-        return x # ???
+        return x  # ???
+
 
 def add_together(x: Union[int, str], y: Union[int, str]) -> Union[int, str]:
     if x == '':
@@ -135,10 +143,12 @@ def add_together(x: Union[int, str], y: Union[int, str]) -> Union[int, str]:
     else:
         return str(x) + str(y)
 
+
 def _read_prefix(arg: str, value: str) -> Optional[Tuple[None, str]]:
     if arg.startswith(value):
         return None, arg[len(value):]
     return None
+
 
 def _read_none(arg: str, value: Sequence[str]) -> Optional[Tuple[str, str]]:
     for s in value:
@@ -146,11 +156,13 @@ def _read_none(arg: str, value: Sequence[str]) -> Optional[Tuple[str, str]]:
             return None
     return arg[:1], arg[1:]
 
+
 def _read_number(arg: str) -> Optional[Tuple[Lit[int], str]]:
     match = re.match(r'\d+', arg)
     if match:
         return Lit(int(match.group(0))), arg[match.span()[1]:]
     return None
+
 
 def _read_die(arg: str) -> Optional[Tuple[Die, str]]:
     test = _read_number(arg)
@@ -183,6 +195,7 @@ def _read_die(arg: str) -> Optional[Tuple[Die, str]]:
         raise InputsTooLarge()
     return Die(n=n, x=x, y=y), arg3
 
+
 def _read_str(arg: str, chars: Callable[[str], Optional[Tuple[str, str]]]) -> Optional[Tuple[str, str]]:
     m = ""
     while True:
@@ -192,6 +205,7 @@ def _read_str(arg: str, chars: Callable[[str], Optional[Tuple[str, str]]]) -> Op
         x, arg = curr
         m += x
     return m, arg
+
 
 def _read_str_lit(arg: str) -> Optional[Tuple[Lit[str], str]]:
     if not (_read_prefix(arg, "'")):
@@ -205,6 +219,7 @@ def _read_str_lit(arg: str) -> Optional[Tuple[Lit[str], str]]:
         return None
     arg = arg[1:]
     return Lit(m), arg
+
 
 def _read_choice_die(arg: str) -> Optional[Tuple[ChoiceDie, str]]:
     test = _read_number(arg)
@@ -243,6 +258,7 @@ def _read_choice_die(arg: str) -> Optional[Tuple[ChoiceDie, str]]:
         return None
     return ChoiceDie(n, arr), arg[1:]
 
+
 def _read_paren(arg: str) -> Optional[Tuple[AbstractDie[Union[int, str]], str]]:
     if not _read_prefix(arg, '('):
         return None
@@ -256,6 +272,7 @@ def _read_paren(arg: str) -> Optional[Tuple[AbstractDie[Union[int, str]], str]]:
         return None
     return res0, arg[1:]
 
+
 def _read_term(arg: str) -> Optional[Tuple[AbstractDie[Union[int, str]], str]]:
     return (_read_paren(arg) or
             _read_adv(arg) or
@@ -263,6 +280,7 @@ def _read_term(arg: str) -> Optional[Tuple[AbstractDie[Union[int, str]], str]]:
             _read_choice_die(arg) or
             _read_die(arg) or
             _read_number(arg))
+
 
 def _read_adv(arg: str) -> Optional[Tuple[Oper[Union[int, str]], str]]:
     test0 = _read_number(arg)
@@ -288,8 +306,10 @@ def _read_adv(arg: str) -> Optional[Tuple[Oper[Union[int, str]], str]]:
     else:
         return None
 
+
 def _read_datum(arg: str) -> Optional[Tuple[Oper[Union[int, str]], str]]:
     return _read_seq(arg)
+
 
 def _read_sign(arg: str) -> Optional[Tuple[int, str]]:
     if _read_prefix(arg, '+'):
@@ -298,6 +318,7 @@ def _read_sign(arg: str) -> Optional[Tuple[int, str]]:
         return -1, arg[1:]
     else:
         return None
+
 
 def _read_seq(arg: str) -> Optional[Tuple[Oper[Union[int, str]], str]]:
     fst = _read_term(arg)
@@ -322,6 +343,7 @@ def _read_seq(arg: str) -> Optional[Tuple[Oper[Union[int, str]], str]]:
             return None
     return Oper(arr, add_together), arg
 
+
 def parse_dice(string: str) -> Optional[AbstractDie[Union[int, str]]]:
     string = re.subn(r'\s', '', string)[0]
     res = _read_datum(string)
@@ -331,6 +353,7 @@ def parse_dice(string: str) -> Optional[AbstractDie[Union[int, str]]]:
     if string1 != "":
         return None
     return res0
+
 
 def dice(string: str) -> Optional[Tuple[Union[int, str], List[Union[int, str]]]]:
     a = parse_dice(string)
