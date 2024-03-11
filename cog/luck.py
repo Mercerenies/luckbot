@@ -3,6 +3,7 @@ from util import OptionalChecked, Context
 
 import traceback
 import dice
+from dice.parser import MAXIMUM_IMAGES
 import discord
 from discord.ext import commands
 import alakazam as zz
@@ -30,10 +31,13 @@ class LuckCommands(commands.Cog, name="Luck-Based Commands"):
             else:
                 final, data = res
                 await ctx.send("{} got {} (individual results: {})".format(target_name, final.value, data))
-                if final.image is not None:
-                    with open(final.image, 'rb') as face_image:
-                        f = discord.File(face_image, os.path.basename(final.image))
-                        await ctx.send(file=f)
+                if len(final.images) <= MAXIMUM_IMAGES:
+                    for face_image in final.images:
+                        with open(face_image, 'rb') as face_image_io:
+                            f = discord.File(face_image_io, os.path.basename(face_image))
+                            embed = discord.Embed(url='https://localhost:8080')
+                            embed.set_image(url='attachment://' + os.path.basename(face_image))
+                            await ctx.send(file=f, embed=embed)
         except TypeError:
             await ctx.send("I'm afraid that doesn't make sense...")
             traceback.print_exc()

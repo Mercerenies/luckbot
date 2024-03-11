@@ -7,6 +7,7 @@ import re
 import random
 from abc import ABC, abstractmethod
 from numbers import Complex
+from functools import reduce
 import alakazam as zz
 
 from typing import List, TypeVar, Generic, Sequence, Union, Callable, Optional, Tuple
@@ -20,6 +21,7 @@ T = TypeVar('T')
 T_co = TypeVar('T_co', covariant=True)
 
 MAXIMUM = 40
+MAXIMUM_IMAGES = 5
 MAXIMUM_INDIVIDUAL = 99999
 
 
@@ -77,17 +79,16 @@ class NamedDie(AbstractDie[int]):
 
     def eval(self, arr: List[int]) -> DieResult[int]:
         m = 0
+        images = []
         for i in range(self.n):
             j = random.randint(self.x, self.y)
             m += j
             arr.append(j)
-        if self.n == 1:
-            return DieResult(m, DICE_MAP[self.name].to_path(m))
-        else:
-            return DieResult(m)
+            images.append(DICE_MAP[self.name].to_path(j))
+        return DieResult(m, images)
 
     def __repr__(self) -> str:
-        return "RangeDie({!r}, {!r}, {!r})".format(self.n, self.x, self.y)
+        return "NamedDie({!r}, {!r}, {!r}, {!r})".format(self.name, self.n, self.x, self.y)
 
 
 class ChoiceDie(AbstractDie[str | int]):
@@ -124,7 +125,7 @@ class Negate(AbstractDie[T_co]):
 
     def eval(self, arr: List[T_co]) -> DieResult[T_co]:
         inner_result = self.expr.eval(arr)
-        return DieResult(neg(inner_result.value))
+        return inner_result.map(neg)
 
     def __repr__(self):
         return "Negate({!r})".format(self.expr)
@@ -158,10 +159,10 @@ class Oper(AbstractDie[T_co]):
         return zz.of(self.data).map(lambda x: x.count()).sum()
 
     def eval(self, arr: List[T_co]) -> DieResult[T_co]:
-        if len(self.data) == 1:
-            return self.data[0].eval(arr)  # Preserve die images
-        value = zz.of(self.data).map(lambda x: x.eval(arr).value).reduce(self.oper)
-        return DieResult(value)
+        results = [x.eval(arr) for x in self.data]
+        value = reduce(self.oper, map(lambda x: x.value, results))
+        images: list[str] = sum(map(lambda x: x.images, results), [])
+        return DieResult(value, images)
 
     def __repr__(self) -> str:
         return "Oper({!r}, {!r})".format(self.data, self.oper)
