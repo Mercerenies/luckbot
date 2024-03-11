@@ -55,7 +55,7 @@ class LuckCommands(commands.Cog, name="Luck-Based Commands"):
                 image = stack.enter_context(open(image_path, 'rb'))
                 filename = f'image{i}.png'
                 file = discord.File(image, filename)
-                embed = discord.Embed(url='https://localhost:8080')
+                embed = discord.Embed(url='https://mercerenies.com/')
                 embed.set_image(url='attachment://' + filename)
                 embeds.append(embed)
                 files.append(file)
