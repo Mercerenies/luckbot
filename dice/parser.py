@@ -1,7 +1,7 @@
 
 from error import InputsTooLarge
 from .result import DieResult
-from .images import image_for
+from .images import ALL_DICE, DICE_MAP
 
 import re
 import random
@@ -52,13 +52,39 @@ class RangeDie(AbstractDie[int]):
             j = random.randint(self.x, self.y)
             m += j
             arr.append(j)
-        return DieResult(m, self._identify_image(m))
+        return DieResult(m)
 
-    def _identify_image(self, result_face: int) -> Optional[str]:
-        if self.x == 1 and self.n == 1:
-            return image_for(self.y, result_face)
+    def __repr__(self) -> str:
+        return "RangeDie({!r}, {!r}, {!r})".format(self.n, self.x, self.y)
+
+
+class NamedDie(AbstractDie[int]):
+    name: str
+    n: int
+    x: int
+    y: int
+
+    def __init__(self, name: str, n: int, x: int, y: int) -> None:
+        if name not in DICE_MAP:
+            raise ValueError("Unknown die name: " + name)
+        self.name = name
+        self.n = n
+        self.x = x
+        self.y = y
+
+    def count(self) -> int:
+        return self.n
+
+    def eval(self, arr: List[int]) -> DieResult[int]:
+        m = 0
+        for i in range(self.n):
+            j = random.randint(self.x, self.y)
+            m += j
+            arr.append(j)
+        if self.n == 1:
+            return DieResult(m, DICE_MAP[self.name].to_path(m))
         else:
-            return None
+            return DieResult(m)
 
     def __repr__(self) -> str:
         return "RangeDie({!r}, {!r}, {!r})".format(self.n, self.x, self.y)
@@ -210,6 +236,28 @@ def _read_die(arg: str) -> Optional[Tuple[RangeDie, str]]:
     return RangeDie(n=n, x=x, y=y), arg3
 
 
+def _read_named_die(arg: str) -> Optional[Tuple[NamedDie, str]]:
+    test = _read_number(arg)
+    if test:
+        n0, arg1 = test
+        n = n0.n
+    else:
+        n = 1
+        arg1 = arg
+
+    named_die = None
+    for die in ALL_DICE:
+        test1 = _read_prefix(arg1, die.die_name)
+        if test1:
+            _, arg2 = test1
+            named_die = die
+            break
+    else:
+        return None  # No such named die
+
+    return NamedDie(name=named_die.die_name, n=n, x=1, y=named_die.die_faces), arg2
+
+
 def _read_str(arg: str, chars: Callable[[str], Optional[Tuple[str, str]]]) -> Optional[Tuple[str, str]]:
     m = ""
     while True:
@@ -292,6 +340,7 @@ def _read_term(arg: str) -> Optional[Tuple[AbstractDie[Union[int, str]], str]]:
             _read_adv(arg) or
             _read_str_lit(arg) or
             _read_choice_die(arg) or
+            _read_named_die(arg) or
             _read_die(arg) or
             _read_number(arg))
 
