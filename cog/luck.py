@@ -10,6 +10,8 @@ import alakazam as zz
 from alakazam import _1
 import random
 import os.path
+from typing import Iterable
+from contextlib import ExitStack
 
 
 class LuckCommands(commands.Cog, name="Luck-Based Commands"):
@@ -32,15 +34,24 @@ class LuckCommands(commands.Cog, name="Luck-Based Commands"):
                 final, data = res
                 await ctx.send("{} got {} (individual results: {})".format(target_name, final.value, data))
                 if len(final.images) <= MAXIMUM_IMAGES:
-                    for face_image in final.images:
-                        with open(face_image, 'rb') as face_image_io:
-                            f = discord.File(face_image_io, os.path.basename(face_image))
-                            embed = discord.Embed(url='https://localhost:8080')
-                            embed.set_image(url='attachment://' + os.path.basename(face_image))
-                            await ctx.send(file=f, embed=embed)
+                    await self._send_images(ctx, final.images)
         except TypeError:
             await ctx.send("I'm afraid that doesn't make sense...")
             traceback.print_exc()
+
+    async def _send_images(self, ctx: Context, images: Iterable[str]) -> None:
+        with ExitStack() as stack:
+            embeds = []
+            files = []
+            for i, image_path in enumerate(images):
+                image = stack.enter_context(open(image_path, 'rb'))
+                filename = f'image{i}.png'
+                file = discord.File(image, filename)
+                embed = discord.Embed(url='https://localhost:8080')
+                embed.set_image(url='attachment://' + filename)
+                embeds.append(embed)
+                files.append(file)
+            await ctx.send(files=files, embeds=embeds)
 
     @commands.command()
     async def listdice(self, ctx: Context) -> None:
