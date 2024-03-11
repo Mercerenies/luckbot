@@ -39,7 +39,15 @@ class LuckCommands(commands.Cog, name="Luck-Based Commands"):
             await ctx.send("I'm afraid that doesn't make sense...")
             traceback.print_exc()
 
-    async def _send_images(self, ctx: Context, images: Iterable[str]) -> None:
+    async def _send_images(self, ctx: Context, images: 'list[str]') -> None:
+        if len(images) == 0:
+            return
+        if len(images) == 1:
+            with open(images[0], 'rb') as f:
+                file = discord.File(f, 'image0.png')
+                await ctx.send(file=file)
+            return
+
         with ExitStack() as stack:
             embeds = []
             files = []
