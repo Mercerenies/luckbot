@@ -17,9 +17,18 @@ class NamedDieImages:
 
 ALL_DICE = [
     NamedDieImages("d3_purpleglow", 3),
+    NamedDieImages("d3_boxy_fireglow", 3),
     NamedDieImages("d4_basic", 4),
+    NamedDieImages("d4_magicopal", 4),
+    NamedDieImages("d6_basic_inverted", 6),
     NamedDieImages("d6_basic", 6),
+    NamedDieImages("d6_magmatic", 6),
+    NamedDieImages("d6_marbled", 6),
+    NamedDieImages("d6_translucent", 6),
+    NamedDieImages("d8_simple", 8),
     NamedDieImages("d8_fireglow", 8),
+    NamedDieImages("d10_bluecrystal", 10),
+    NamedDieImages("d10_fireglow", 10),
     NamedDieImages("d12_coldglow", 12),
 ]
 
