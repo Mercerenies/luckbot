@@ -21,7 +21,7 @@ T = TypeVar('T')
 T_co = TypeVar('T_co', covariant=True)
 
 MAXIMUM = 40
-MAXIMUM_IMAGES = 5
+MAXIMUM_IMAGES = 4
 MAXIMUM_INDIVIDUAL = 99999
 
 
