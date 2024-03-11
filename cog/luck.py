@@ -39,6 +39,12 @@ class LuckCommands(commands.Cog, name="Luck-Based Commands"):
             traceback.print_exc()
 
     @commands.command()
+    async def listdice(self, ctx: Context) -> None:
+        """Lists all available named dice"""
+        dice_list = '\n'.join(f"* {d.die_name}" for d in dice.ALL_DICE)
+        await ctx.send(f"All named dice:\n{dice_list}")
+
+    @commands.command()
     async def volunteer(self, ctx: Context, role: OptionalChecked[discord.Role] = None):
         """Randomly selects a player"""
         choices = zz.of(ctx.bot.get_all_members())
