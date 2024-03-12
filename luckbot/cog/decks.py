@@ -1,9 +1,9 @@
 
-from storage import json_data, DeckData, DEFAULT_MAX_DECK
-from permission import is_admin_check, is_admin_or_deck_owner, is_admin_or_deck_owner_check
-from util import find_member, Context, expand_roles
-import error
-from deck import Deck, DeckTemplate
+from luckbot.storage import json_data, DeckData, DEFAULT_MAX_DECK
+from luckbot.permission import is_admin_check, is_admin_or_deck_owner, is_admin_or_deck_owner_check
+from luckbot.util import find_member, Context, expand_roles
+import luckbot.error as error
+from luckbot.deck import Deck, DeckTemplate
 
 import discord
 from discord.ext import commands

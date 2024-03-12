@@ -1,8 +1,8 @@
 
-from storage import json_data, RoleData
-from permission import is_admin_check, is_admin_or_role_owner_check
-from util import find_member, Context
-import error
+from luckbot.storage import json_data, RoleData
+from luckbot.permission import is_admin_check, is_admin_or_role_owner_check
+from luckbot.util import find_member, Context
+import luckbot.error as error
 
 import discord
 from discord.ext import commands

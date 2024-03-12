@@ -1,6 +1,6 @@
 
-from storage import json_data, DeckData
-from error import DeckNotFound, DeckTemplateNotFound
+from luckbot.storage import json_data, DeckData
+from luckbot.error import DeckNotFound, DeckTemplateNotFound
 
 import random
 from discord.ext import commands

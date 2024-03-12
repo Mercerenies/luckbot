@@ -1,6 +1,6 @@
 
-from util import Context
-from storage import json_data
+from luckbot.util import Context
+from luckbot.storage import json_data
 
 import random
 import discord
