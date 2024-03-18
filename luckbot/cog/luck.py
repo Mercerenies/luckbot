@@ -1,9 +1,9 @@
 
-from util import OptionalChecked, Context
+from luckbot.util import OptionalChecked, Context
 
 import traceback
-import dice
-from dice.parser import MAXIMUM_IMAGES
+import luckbot.dice as dice
+from luckbot.dice.parser import MAXIMUM_IMAGES
 import discord
 from discord.ext import commands
 import alakazam as zz

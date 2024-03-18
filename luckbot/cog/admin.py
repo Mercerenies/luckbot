@@ -1,8 +1,8 @@
 
-from permission import is_admin_check
-from util import Context, OptionalChecked, log_message
-import timezone as tz
-from storage import json_data
+from luckbot.permission import is_admin_check
+from luckbot.util import Context, OptionalChecked, log_message
+import luckbot.timezone as tz
+from luckbot.storage import json_data
 
 import alakazam as zz
 from alakazam import _1, _2, _3

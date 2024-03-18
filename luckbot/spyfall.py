@@ -1,6 +1,6 @@
 
 import discord
-import error
+import luckbot.error as error
 
 import json
 from dataclasses import dataclass

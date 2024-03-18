@@ -1,5 +1,5 @@
 
-from error import InputsTooLarge
+from luckbot.error import InputsTooLarge
 from .result import DieResult
 from .images import ALL_DICE, DICE_MAP
 

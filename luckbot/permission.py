@@ -1,7 +1,7 @@
 
-import error
-from storage import json_data
-from deck import Deck
+import luckbot.error as error
+from luckbot.storage import json_data
+from luckbot.deck import Deck
 
 import discord
 from discord.ext import commands

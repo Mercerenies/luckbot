@@ -1,5 +1,5 @@
 
-from error import PermissionsException, InputsTooLarge, UnmanagedRole, DeckNotFound, DeckTemplateNotFound, BadFaceArgument
+from luckbot.error import PermissionsException, InputsTooLarge, UnmanagedRole, DeckNotFound, DeckTemplateNotFound, BadFaceArgument
 
 import discord.ext.commands as commands
 import discord

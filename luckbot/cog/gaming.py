@@ -1,8 +1,8 @@
 
-from util import Context, expand_roles
-from grid import GridConfig, WordList, DefaultWordList, CustomWordList, CodenameManager, FirstContactManager
-from error import InputsTooLarge, TooManyMembers
-from spyfall import Location as SpyfallLocation
+from luckbot.util import Context, expand_roles
+from luckbot.grid import GridConfig, WordList, DefaultWordList, CustomWordList, CodenameManager, FirstContactManager
+from luckbot.error import InputsTooLarge, TooManyMembers
+from luckbot.spyfall import Location as SpyfallLocation
 
 import discord
 from discord.ext import commands
