@@ -30,7 +30,7 @@ ALL_DICE = [
     NamedDieImages("d10_bluecrystal", 10),
     NamedDieImages("d10_fireglow", 10),
     NamedDieImages("d12_coldglow", 12),
-    NamedDieImages("D20_simple", 20),
+    NamedDieImages("d20_simple", 20),
 ]
 
 
